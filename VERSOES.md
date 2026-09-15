@@ -39,3 +39,7 @@ Removida a tela inicial pública. A raiz abre diretamente o visualizador em modo
 ## 15/09/2026 — Visualização compartilhada sem login
 
 Removido o login obrigatório dos links `?share=...`, que agora carregam o IFC e os PDFs vinculados diretamente em modo somente leitura. O servidor continua recusando qualquer `POST` sem a sessão administrativa do proprietário, impedindo novos IFCs, PDFs, projetos ou alterações por quem recebeu o link.
+
+## 15/09/2026 — Publicação Netlify
+
+Deploy de produção direcionado ao site existente `eng-gustavogil-ifc.netlify.app`, preservando esta versão completa. A visualização pública e os links compartilhados permanecem sem login e somente para leitura; uploads, alterações e criação de novos compartilhamentos continuam restritos à área `/admin`.
