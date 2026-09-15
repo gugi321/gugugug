@@ -1,0 +1,9 @@
+{
+  "name": "gustavogil-ifc-viewer",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@netlify/blobs": "^10.1.0",
+    "@netlify/identity": "^2.0.0"
+  }
+}
