@@ -1,6 +1,5 @@
 import { getStore } from "@netlify/blobs";
-import { createHmac, createHash, timingSafeEqual } from "node:crypto";
-import { getUser } from "@netlify/identity";
+import { createHmac, timingSafeEqual } from "node:crypto";
 
 const STORE_NAME = "ifc-shared-models";
 const MAX_MODEL_BYTES = 250 * 1024 * 1024;
@@ -63,19 +62,10 @@ function sameOrigin(request) {
   return !origin || origin === new URL(request.url).origin;
 }
 
-const normalizedEmail = value => String(value || "").trim().toLowerCase();
-const grantKey = (id, email) => `access/${id}/${createHash('sha256').update(email).digest('hex')}`;
-async function viewerAllowed(request, files, id, url) {
-  if (currentOwner(request)) return true;
-  let user; try { user = await getUser(); } catch { return false; }
-  if (!user?.emailVerified || !user.email) return false;
-  const project = url.searchParams.get('project') || id;
-  if (!validId(project)) return false;
-  const grant = await files.get(grantKey(project, normalizedEmail(user.email)), {type:'json'});
-  if (!grant?.active) return false;
-  if (project === id) return true;
-  const manifest = await getManifest(files, project);
-  return Array.isArray(manifest?.state?.pdfs) && manifest.state.pdfs.some(pdf => pdf.id === id);
+async function viewerAllowed() {
+  // Compartilhamentos são links-bearer: não exigem login. Toda gravação
+  // continua protegida por requireOwner(), inclusive upload e finalização.
+  return true;
 }
 
 async function getManifest(files, id) {
@@ -111,25 +101,8 @@ export default async (request, context) => {
 
   const files = store();
 
-  if (url.searchParams.get('action') === 'access') {
-    const denied = requireOwner(request); if (denied) return denied;
-    if (!await getManifest(files, id)) return fail('Projeto não encontrado.',404);
-    if (request.method === 'GET') {
-      const {blobs} = await files.list({prefix:`access/${id}/`});
-      const entries = await Promise.all(blobs.map(blob => files.get(blob.key,{type:'json'})));
-      return json({ok:true,people:entries.filter(entry => entry?.active).map(entry => ({email:entry.email}))});
-    }
-    if (request.method !== 'POST') return fail('Método não permitido.',405);
-    let payload; try { payload = await request.json(); } catch { return fail('Dados inválidos.'); }
-    const email = normalizedEmail(payload.email);
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) return fail('E-mail inválido.');
-    if (!['grant','revoke'].includes(payload.action)) return fail('Ação inválida.');
-    await files.setJSON(grantKey(id,email),{email,active:payload.action==='grant',updatedAt:new Date().toISOString()});
-    return json({ok:true});
-  }
-
   if (request.method === "GET") {
-    if (!await viewerAllowed(request,files,id,url)) return fail('Entre com um e-mail confirmado e autorizado para este projeto.',403);
+    if (!await viewerAllowed(request,files,id,url)) return fail('Modelo compartilhado não encontrado.',403);
     const manifest = await getManifest(files, id);
     if (!manifest) return fail("Modelo compartilhado não encontrado.", 404);
     const partParam = url.searchParams.get("part");

@@ -18,7 +18,7 @@ PDFs: até 40 arquivos de 100 MB por modelo. Upload em partes de 4 MB pela API j
 
 ## Bloqueio de compartilhamentos
 
-A versão atual separa a área do proprietário dos links compartilhados. O navegador público carrega o modelo associado ao link em modo somente visualização; controles de IFC, PDF, compartilhamento e exportação ficam ocultos e o endpoint `/api/share` rejeita todo POST sem uma sessão administrativa assinada.
+A versão atual separa a área do proprietário dos links compartilhados. O navegador público carrega o modelo associado ao link em modo somente visualização e sem login; controles de IFC, PDF, compartilhamento e exportação ficam ocultos e o endpoint `/api/share` rejeita todo POST sem uma sessão administrativa assinada.
 
 A restauração da tag acima é somente um retorno visual/histórico. Ela antecede este bloqueio e reabre o endpoint de gravação; se for publicada, reaplique as correções de autenticação antes de usar o site publicamente.
 
@@ -34,4 +34,8 @@ O Google e o login da visualização pública permanecem fora do fluxo. A área 
 
 ## 15/09/2026 — Visualizador direto e área administrativa separada
 
-Removida a tela inicial pública. A raiz abre diretamente o visualizador em modo somente leitura; `/admin` valida a sessão assinada antes de liberar upload de IFC, PDFs, exportações e criação de compartilhamentos. Links compartilhados continuam restritos às pessoas autorizadas por e-mail confirmado, sem controles de alteração ou novos uploads. O WhatsApp permanece disponível apenas como canal de encaminhamento do convite.
+Removida a tela inicial pública. A raiz abre diretamente o visualizador em modo somente leitura; `/admin` valida a sessão assinada antes de liberar upload de IFC, PDFs, exportações e criação de compartilhamentos. Links compartilhados não pedem login e continuam sem controles de alteração ou novos uploads; o link deve ser enviado somente às pessoas escolhidas. O e-mail e o WhatsApp permanecem disponíveis apenas como canais de encaminhamento do convite.
+
+## 15/09/2026 — Visualização compartilhada sem login
+
+Removido o login obrigatório dos links `?share=...`, que agora carregam o IFC e os PDFs vinculados diretamente em modo somente leitura. O servidor continua recusando qualquer `POST` sem a sessão administrativa do proprietário, impedindo novos IFCs, PDFs, projetos ou alterações por quem recebeu o link.

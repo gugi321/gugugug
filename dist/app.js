@@ -1,5 +1,5 @@
 import { createInspector } from './properties.js';
-import { installAccessManager, requireViewer } from './access.js';
+import { installAccessManager } from './access.js';
 const $=id=>document.getElementById(id);
 const urlParams=new URLSearchParams(location.search),sharedId=urlParams.get('share'),embedded=$('embeddedIFC'),adminPath=location.pathname.replace(/\/+$/,'')==='/admin';
 // A página pública e os links compartilhados são somente leitura. O caminho /admin
@@ -249,7 +249,7 @@ async function createShareLink(){
   const response=await fetch(`/api/share/${shareId}`,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'finalize',total,size:currentFile.size,name:currentFile.name,state:viewState()})});
   const error=await apiError(response,'Falha ao finalizar o compartilhamento.');if(error)throw error;
   const result=await response.json(),shareUrl=result.shareUrl||new URL(`?share=${shareId}`,location.origin).href;
-  $('shareLink').value=shareUrl;$('shareLinkRow').hidden=false;$('shareStatus').textContent='Projeto salvo. Autorize os e-mails em Pessoas autorizadas antes de enviar o link.';
+ $('shareLink').value=shareUrl;$('shareLinkRow').hidden=false;$('shareStatus').textContent='Projeto salvo. Envie o link somente às pessoas escolhidas; a visualização não exige login.';
  }catch(error){$('shareStatus').textContent=error.message||'Não foi possível criar o link.'}
  finally{button.disabled=false}
 }
@@ -399,7 +399,7 @@ async function bootstrapAccess(){
  installAccessManager();
  await initIdentity();
  if(readOnlyMode){
-  if(sharedId){hideBrandIntro();await requireViewer();openSharedModel(sharedId);}
+  if(sharedId){hideBrandIntro();openSharedModel(sharedId);}
   else if(embedded){(async()=>{try{const data=JSON.parse(embedded.textContent),binary=atob(data.data||$('embeddedDownload')?.getAttribute('href')?.split(',')[1]||''),bytes=new Uint8Array(binary.length);for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);trustedReadOnlyLoad=true;let opened=false;try{opened=await load(new File([bytes],data.name,{type:'application/x-step'}))}finally{trustedReadOnlyLoad=false}if(opened){restoreDocuments(data.state?.pdfs);restoreState(data.state);if($('embeddedPanel'))$('embeddedPanel').hidden=true;hideBrandIntro();}}catch(e){status('Não foi possível abrir o modelo incorporado: '+e.message)}})();}
  }
 }
