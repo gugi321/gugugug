@@ -1,15 +1,17 @@
 # Acesso do visualizador IFC
 
-O endereço raiz abre a identidade `Eng Gustavo Gil` e depois a área reservada. O proprietário entra pelo Netlify Identity. Links com `?share=...` carregam somente o modelo indicado e não exibem controles para abrir outro IFC, enviar PDFs, criar links ou exportar o programa.
+O endereço raiz abre diretamente o visualizador em modo somente leitura. A área `/admin` é reservada ao proprietário e exige a sessão administrativa configurada nas variáveis do Netlify. Links com `?share=...` carregam somente o modelo indicado e não exibem controles para abrir outro IFC, enviar PDFs, criar links ou exportar o programa.
 
-A regra principal é aplicada no servidor: qualquer `POST /api/share` precisa de uma sessão Identity válida e do papel central `owner` ou de uma correspondência com `IFC_OWNER_EMAIL`/`IFC_OWNER_ID`. O `GET` dos modelos continua público para que os links funcionem sem conta.
+A regra principal é aplicada no servidor: qualquer `POST /api/share` precisa da sessão administrativa assinada pelo endpoint `/api/auth`. A leitura de um compartilhamento exige e-mail confirmado e previamente autorizado para aquele projeto; PDFs vinculados usam a mesma autorização do projeto principal.
 
 ## Configuração única no Netlify
 
-1. Abra **Project configuration → Identity** e clique em **Enable Identity**.
-2. Em **Registration**, selecione **Invite only**. Não deixe cadastro aberto.
-3. Em **Users**, convide somente a conta do proprietário e atribua `owner`.
-4. Se desejar uma trava adicional, crie a variável de ambiente `IFC_OWNER_EMAIL` com o mesmo e-mail da conta (a aplicação já usa `gustavogil.ucsal@gmail.com` como padrão desta instalação) e escopo **Functions**. Também é possível usar `IFC_OWNER_ID`.
-5. Faça um novo deploy depois de alterar a configuração.
+1. Em **Project configuration → Environment variables**, crie `IFC_ADMIN_USERNAME`.
+2. Crie `IFC_ADMIN_PASSWORD` com uma senha forte e exclusiva.
+3. Crie `IFC_SESSION_SECRET` com uma sequência aleatória longa, diferente da senha.
+4. Deixe as três variáveis disponíveis para **Functions** e faça um novo deploy.
+5. Acesse `https://eng-gustavogil-ifc.netlify.app/admin` para carregar IFCs, PDFs e criar compartilhamentos.
+
+O número de WhatsApp é usado apenas para enviar o convite. A autorização técnica continua vinculada ao e-mail confirmado, evitando que um link encaminhado para terceiros dê acesso ao projeto.
 
 Essa configuração não apaga nenhum modelo já compartilhado. Cópias HTML antigas, baixadas antes desta atualização, continuam sendo arquivos locais independentes; gere uma nova cópia somente leitura se ela precisar ser encaminhada.

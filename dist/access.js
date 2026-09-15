@@ -8,7 +8,7 @@ export function installAccessManager(){
  if(location.pathname.replace(/\/+$/,'')!=='/admin')return;
  const box=make('section');box.style.cssText='border-top:1px solid #ccd6da;margin-top:20px;padding-top:16px';
  box.append(make('h3','Pessoas autorizadas'));
- box.append(make('p','Crie o link acima ou cole um link existente. Autorize cada e-mail e envie o convite.'));
+ box.append(make('p','Crie o link acima ou cole um link existente. Autorize cada e-mail e envie o convite. O WhatsApp é apenas o canal para encaminhar o convite; o acesso continua vinculado ao e-mail confirmado.'));
  const link=make('input');link.type='url';link.placeholder='Link do projeto';link.setAttribute('aria-label','Link do projeto');
  const email=make('input');email.type='email';email.placeholder='E-mail da pessoa';email.setAttribute('aria-label','E-mail autorizado');
  const phone=make('input');phone.type='tel';phone.placeholder='WhatsApp com DDI e DDD (opcional)';phone.setAttribute('aria-label','WhatsApp com DDI e DDD');

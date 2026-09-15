@@ -18,16 +18,20 @@ PDFs: até 40 arquivos de 100 MB por modelo. Upload em partes de 4 MB pela API j
 
 ## Bloqueio de compartilhamentos
 
-A versão atual separa a área do proprietário dos links compartilhados. O navegador público carrega o modelo associado ao link em modo somente visualização; controles de IFC, PDF, compartilhamento e exportação ficam ocultos e o endpoint `/api/share` rejeita todo POST sem uma sessão Netlify Identity autorizada.
+A versão atual separa a área do proprietário dos links compartilhados. O navegador público carrega o modelo associado ao link em modo somente visualização; controles de IFC, PDF, compartilhamento e exportação ficam ocultos e o endpoint `/api/share` rejeita todo POST sem uma sessão administrativa assinada.
 
 A restauração da tag acima é somente um retorno visual/histórico. Ela antecede este bloqueio e reabre o endpoint de gravação; se for publicada, reaplique as correções de autenticação antes de usar o site publicamente.
 
-Para liberar o proprietário no Netlify: ative o Identity do projeto, mude Registration para Invite only e atribua à única conta autorizada o papel `owner`. Opcionalmente defina `IFC_OWNER_EMAIL` ou `IFC_OWNER_ID` nas variáveis de ambiente do projeto para uma lista de permissão explícita. Sem papel ou allowlist, as gravações permanecem bloqueadas.
+Para liberar o proprietário no Netlify: configure `IFC_ADMIN_USERNAME`, `IFC_ADMIN_PASSWORD` e `IFC_SESSION_SECRET` nas variáveis de ambiente das Functions. Sem uma sessão administrativa assinada, as gravações permanecem bloqueadas.
 
 ## 14/09/2026 — Plantas PDF e detalhes inferiores
 
-Aba Plantas PDF com busca, filtros e envio de vários arquivos; falhas individuais não interrompem o lote. Detalhes em painel inferior fora da vista 3D. Compartilhamentos carregam somente os PDFs registrados no link. Testes locais de interface e autorização com sessões simuladas passaram; autenticação real depende da ativação do Identity e cadastro do proprietário no painel Netlify.
+Aba Plantas PDF com busca, filtros e envio de vários arquivos; falhas individuais não interrompem o lote. Detalhes em painel inferior fora da vista 3D. Compartilhamentos carregam somente os PDFs registrados no link. Testes locais de autorização com sessões simuladas passaram.
 
 ## 14/09/2026 — Login somente por e-mail e senha
 
-Removido o fluxo e o botão de login com Google. A área do proprietário utiliza somente e-mail e senha do Netlify Identity; o campo de senha é obrigatório. A versão anterior permanece preservada no arquivo `IFC-login-netlify-final.zip`.
+O Google e o login da visualização pública permanecem fora do fluxo. A área do proprietário usa somente a sessão administrativa em `/admin`.
+
+## 15/09/2026 — Visualizador direto e área administrativa separada
+
+Removida a tela inicial pública. A raiz abre diretamente o visualizador em modo somente leitura; `/admin` valida a sessão assinada antes de liberar upload de IFC, PDFs, exportações e criação de compartilhamentos. Links compartilhados continuam restritos às pessoas autorizadas por e-mail confirmado, sem controles de alteração ou novos uploads. O WhatsApp permanece disponível apenas como canal de encaminhamento do convite.
