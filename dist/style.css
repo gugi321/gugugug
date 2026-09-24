@@ -23,7 +23,7 @@
 
 #dimensionPanel{padding:12px 14px;background:#edf6f9;border-bottom:1px solid #cedee5;flex-shrink:0}.dimension-head{display:flex;justify-content:space-between;align-items:center;font-size:12px}.dimension-head button{font-size:10px;padding:5px}#dimensionValues{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}#dimensionValues span{padding:6px;background:white;border-radius:5px;font-size:12px;color:#16536b}#dimensionPanel small{font-size:10px;line-height:1.4;display:block;color:#577381}.dimension-views{display:flex;gap:4px;margin-top:9px;flex-wrap:wrap}.dimension-views button{font-size:10px;padding:6px}.dimensions-active #selection.inspector{width:310px}.dimensions-active #propertyBody{max-height:220px}.dimensions-active .element-actions{flex-wrap:wrap}.dimensions-active .element-actions button{flex:auto}@media(max-width:760px){.dimensions-active #selection.inspector{width:270px;left:auto;bottom:110px;max-height:220px}.dimensions-active #propertyBody,.dimensions-active .inspector-head .eyebrow,.dimensions-active .element-actions{display:none}.dimensions-active .inspector-head{padding:8px 12px}.dimensions-active .inspector-head h2{font-size:14px;margin:0}.dimensions-active #elementType{display:none}}
 
-#pdfDialog{width:96vw;max-width:1450px;height:92dvh;padding:18px}#pdfDialog .pdf-layout{display:grid;grid-template-columns:310px 1fr;gap:18px;height:calc(100% - 50px);margin-top:14px}.pdf-library{overflow:auto;padding-right:8px}.pdf-library>select{width:100%;padding:8px}.pdf-card{background:#f5f8fa;border:1px solid #d6e1e6;border-radius:8px;padding:10px;margin-top:12px}.pdf-card summary{font-size:13px;overflow-wrap:anywhere;cursor:pointer}.pdf-card button{font-size:11px;padding:7px;margin:6px 4px 0 0}.pdf-card label{display:block;font-size:12px;margin-top:10px}.pdf-card select{display:block;width:100%;padding:7px;margin-top:5px}.pdf-element-choices{max-height:150px;overflow:auto}.pdf-element-choices label{display:flex;justify-content:flex-start;gap:6px;margin:6px 0}.pdf-reader{min-width:0;display:flex;flex-direction:column}.pdf-reader-tools{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.pdf-reader-tools button,.pdf-reader-tools a{font-size:12px;padding:7px}#pdfPage{font-size:12px}#pdfCanvasWrap{overflow:auto;flex:1;background:#dce3e7;min-height:220px;padding:12px}#pdfCanvas{background:white;touch-action:pan-x pan-y}#pdfStatus{font-size:12px;min-height:20px}#projectPDFs{font-size:12px}@media(max-width:760px){#pdfDialog .pdf-layout{display:flex;flex-direction:column;overflow:auto}.pdf-library{max-height:35dvh;flex-shrink:0}.pdf-reader{min-height:45dvh}#pdfDialog{padding:12px}.brand strong{font-size:12px}header{padding:0 8px}#projectPDFs{font-size:10px!important}}
+#pdfDialog{width:96vw;max-width:1450px;height:92dvh;padding:18px}#pdfDialog .pdf-layout{display:grid;grid-template-columns:310px 1fr;gap:18px;height:calc(100% - 50px);margin-top:14px}.pdf-library{overflow:auto;padding-right:8px}.pdf-library>select{width:100%;padding:8px}.pdf-card{background:#f5f8fa;border:1px solid #d6e1e6;border-radius:8px;padding:10px;margin-top:12px}.pdf-card summary{font-size:13px;overflow-wrap:anywhere;cursor:pointer}.pdf-card button{font-size:11px;padding:7px;margin:6px 4px 0 0}.pdf-card-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:6px}.pdf-card-actions button{margin:0}.pdf-card label{display:block;font-size:12px;margin-top:10px}.pdf-card select{display:block;width:100%;padding:7px;margin-top:5px}.pdf-element-choices{max-height:150px;overflow:auto}.pdf-element-choices label{display:flex;justify-content:flex-start;gap:6px;margin:6px 0}.pdf-reader{min-width:0;display:flex;flex-direction:column}.pdf-reader-tools{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.pdf-reader-tools button,.pdf-reader-tools a{font-size:12px;padding:7px}#pdfPage{font-size:12px}#pdfCanvasWrap{overflow:auto;flex:1;background:#dce3e7;min-height:220px;padding:12px}#pdfCanvas{background:white;touch-action:pan-x pan-y}#pdfStatus{font-size:12px;min-height:20px}#projectPDFs{font-size:12px}@media(max-width:760px){#pdfDialog .pdf-layout{display:flex;flex-direction:column;overflow:auto}.pdf-library{max-height:35dvh;flex-shrink:0}.pdf-reader{min-height:45dvh}#pdfDialog{padding:12px}.brand strong{font-size:12px}header{padding:0 8px}#projectPDFs{font-size:10px!important}}
 
 /* Separate model, plant reader and bottom element dock. */
 #projectWorkspace{min-width:0;min-height:0;display:flex;flex-direction:column;overflow:hidden}#projectWorkspace #viewport{flex:1;min-height:240px;height:auto}.project-tabs{display:flex;gap:6px;padding:8px 16px;background:#fff;border-bottom:1px solid #dce2e5}.project-tabs .active{background:#233b44;color:white}.project-tabs span{margin-left:8px;font-size:11px}#selection.inspector{position:relative;inset:auto;flex:none;width:100%;max-width:none;height:32dvh;max-height:380px;min-height:190px;border-radius:0;border:0;border-top:1px solid #cad6dc;box-shadow:none;overflow:auto;display:block}#selection .inspector-head{padding:10px 18px}#selection .inspector-head h2{margin:4px 0;font-size:18px}#selection .element-actions{padding:6px 16px;justify-content:flex-start}#selection .element-actions button{flex:none}#selection #propertyBody{overflow:visible;padding:12px 16px}#selection .property-summary{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}#selection #elementSection,#selection #dimensionPanel{margin:8px 16px}#pdfDialog{position:relative;inset:auto;margin:0;width:100%;max-width:none;height:auto;max-height:none;flex:1;min-height:0;border:0;border-radius:0;padding:16px;background:#f7fafb;display:flex;flex-direction:column}#pdfDialog .dialog-head{flex:none}#pdfDialog .pdf-layout{flex:1;min-height:0;height:auto;grid-template-columns:300px minmax(0,1fr)}#pdfDialog .pdf-library{overflow:auto;min-height:0}#pdfDialog .pdf-reader{min-width:0;min-height:0;overflow:hidden}#pdfCanvasWrap{min-height:0;flex:1;overflow:auto}#pdfSearch{width:100%;padding:10px;border:1px solid #cedbe0;border-radius:6px}#projectWorkspace.pdf-active #viewport,#projectWorkspace.pdf-active #selection{display:none!important}main:has(.pdf-active){grid-template-columns:1fr}main:has(.pdf-active)>aside{display:none}#projectPDFs{display:none}#pdfOwnerHint[hidden]{display:none!important}.readonly #welcome .hint,.readonly #welcome .privacy{display:none}
@@ -31,8 +31,8 @@
 
 #brandIntro{z-index:32;transition:opacity .3s}#projectWorkspace:fullscreen{height:100dvh;background:#f2f5f6}.readonly #pdfDialog #pdfListCount{display:block}.pdf-reader-tools{flex:none}#closePDFs{font-size:12px}#pdfDialog .pdf-layout{overflow:hidden}@media(max-width:760px){main:has(#selection:not([hidden]))>aside{display:none}}
 
-/* Minimal project entry with e-mail and password authentication. */
-.brand-intro-card,.owner-gate-card{text-align:center;padding:52px 32px}.brand-intro h1,.owner-gate h1{font-size:clamp(27px,5vw,38px);font-weight:600;letter-spacing:-1px;line-height:1.2}.brand-intro .entry-author,.owner-gate .entry-author{font-size:20px;color:#5e727c;margin:20px 0 32px}.owner-gate-card{max-width:520px}.owner-gate-card form{text-align:left}#brandIntroHint:empty,#ownerStatus:empty{display:none}.brand-intro .auth-status{margin-bottom:0}
+/* Minimal project entry, with a separate administrative entry. */
+.brand-intro-card,.owner-gate-card{text-align:center;padding:52px 32px}.brand-intro h1,.owner-gate h1{font-size:clamp(27px,5vw,38px);font-weight:600;letter-spacing:-1px;line-height:1.2}.brand-intro .entry-author,.owner-gate .entry-author{font-size:20px;color:#5e727c;margin:20px 0 32px}.owner-gate-card{max-width:520px}.owner-gate-card form{text-align:left}#brandIntroHint:empty,#ownerStatus:empty{display:none}.brand-intro .auth-status{margin-bottom:0}#ownerGoogle{margin-top:12px}
 
 /* Information occupies its own row, including while a section is active. */
 #informationDock{display:grid;grid-template-columns:minmax(0,1fr);flex:0 0 auto;min-height:0;max-height:36dvh;overflow:hidden;border-top:1px solid #cedae0;background:#fff}
@@ -47,130 +47,211 @@
 #projectWorkspace #viewport{min-height:240px}
 @media(max-width:760px){#informationDock:has(#selection:not([hidden])):has(#status:not([hidden])){grid-template-columns:minmax(0,1fr) 112px}#informationDock #status{font-size:11px;padding:12px 8px}#informationDock #selection .element-actions{flex-wrap:wrap}#informationDock #selection #elementSection{grid-template-columns:1fr 1fr;gap:8px}#informationDock #selection #elementSection label{display:block}#informationDock #selection #elementSection select{width:100%;font-size:12px}#informationDock #selection #elementSection strong{font-size:12px}#projectWorkspace #viewport{min-height:240px}#projectWorkspace{overflow-y:auto}main{min-height:440px}.navigation{display:none}}
 
-/* Keep the viewer usable before owner authentication. */
-.locked main,.locked footer{filter:none;pointer-events:auto}.locked header{pointer-events:auto}
-.locked #share,.locked .open,.locked #uploadPDFs,.locked #pdfFiles,.locked [data-owner-control]{display:none!important}
+.build-version{font-size:11px;opacity:.62;white-space:nowrap}
+.share-permission{border:1px solid #d7e2e7;border-radius:10px;padding:12px;margin:14px 0;background:#f8fafb}.share-permission legend{padding:0 6px;font-size:12px;font-weight:700;color:#526b77}.share-permission label{display:flex;gap:10px;align-items:flex-start;padding:11px 8px;border-radius:8px;cursor:pointer}.share-permission label:has(input:checked){background:#eef4f6}.share-permission input{margin-top:3px}.share-permission span{display:grid;gap:4px}.share-permission strong{font-size:14px;color:#294b5c}.share-permission small{font-size:12px;line-height:1.45;color:#6b818d}.readonly .share-permission{display:none}
 
+.share-progress{margin-top:12px}.share-progress-track{height:8px;background:#e6edf1;border-radius:999px;overflow:hidden}.share-progress-bar{height:100%;width:0%;background:#ec7640;transition:width .18s ease}.share-progress-text{margin-top:7px;font-size:12px;color:#58717d}.share-link-row{margin-top:10px}#shareStatus{margin-top:8px}.share-option.is-uploading{border-color:#ec7640;background:#fff7f2}.share-option.is-uploading strong{color:#c85b29}
+
+.pdf-list-title{display:flex;flex-direction:column;gap:2px;margin:14px 0 8px}.pdf-list-title strong{font-size:15px;color:#233640}.pdf-list-title .hint{margin:0}.pdf-library details{border:1px solid #d9e2e6;border-radius:10px;padding:10px 12px;margin:8px 0;background:#fff}.pdf-library details summary{cursor:pointer;font-weight:700;color:#233640;word-break:break-word}
+
+/* ===== Mobile optimization · 15/09/2026 ===== */
+html,body{max-width:100%;overflow-x:hidden}
+@media(max-width:760px){
+  html,body{height:100%;min-height:100%;overscroll-behavior:none}
+  body{display:flex;flex-direction:column;min-height:100dvh;overflow:hidden;background:#eef3f5}
+  button,input,select{font-size:16px}
+  button{min-height:44px}
+
+  header{height:auto;min-height:0;flex:none;display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:8px;padding:8px max(10px,env(safe-area-inset-right)) 8px max(10px,env(safe-area-inset-left));padding-top:max(8px,env(safe-area-inset-top));overflow:visible}
+  header .brand{grid-column:1/-1;min-width:0!important;gap:9px}
+  header .brand strong{font-size:15px;line-height:1.2}
+  header .brand small{font-size:9px;margin-top:3px}
+  header .mark{display:grid;width:34px;height:34px;padding:0;place-items:center;font-size:15px;flex:none}
+  header #filename{display:block;grid-column:1/2;min-width:0;font-size:11px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#b8c5ca}
+  header #share,header .open{min-height:44px;padding:9px 12px!important;font-size:12px;white-space:nowrap}
+  header #share{grid-column:2/3}
+  header .open{grid-column:3/4}
+  #projectPDFs{display:none!important}
+
+  main{position:relative;display:block!important;flex:1;min-height:0;height:auto!important;overflow:hidden}
+  #projectWorkspace{height:100%;min-height:0;overflow:hidden!important}
+  .project-tabs{flex:none;gap:6px;padding:6px 8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .project-tabs::-webkit-scrollbar{display:none}
+  .project-tabs button{min-height:42px;padding:8px 14px;white-space:nowrap;flex:0 0 auto}
+
+  /* Sidebar vira painel lateral sobreposto, em vez de empurrar o 3D para baixo. */
+  main>aside{position:absolute;z-index:30;inset:0 auto 0 0;width:min(88vw,340px);max-height:none!important;padding:18px 16px 28px;background:#fff;border-right:1px solid #cfdbe0;box-shadow:8px 0 28px #18323c2e;overflow-y:auto;-webkit-overflow-scrolling:touch;transform:translateX(0);transition:transform .2s ease}
+  body.sidebar-hidden main>aside{display:block!important;transform:translateX(-105%);pointer-events:none;box-shadow:none}
+  body:not(.sidebar-hidden) #projectWorkspace:after{content:"";position:absolute;inset:0;z-index:24;background:#10252d55;pointer-events:none}
+  #layers{max-height:34dvh;min-height:60px}
+  #layerSearch{min-height:44px}
+  .quick button,.axes button{min-height:44px}
+  .check input{width:22px;height:22px}
+
+  #projectWorkspace #viewport{flex:1;min-height:0!important;height:auto!important}
+  #viewport{min-height:0!important}
+  .view-label{top:8px;left:8px;gap:8px;z-index:26}
+  .view-label #sidebarToggle{width:46px;height:46px;padding:0;font-size:21px;background:#fff;box-shadow:0 2px 10px #243b4420}
+  #viewName{display:none}
+
+  .view-controls{top:8px;left:62px;right:8px;max-width:none;display:flex;justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto;gap:5px;padding-bottom:4px;scrollbar-width:none;-webkit-overflow-scrolling:touch;z-index:5}
+  .view-controls::-webkit-scrollbar{display:none}
+  .view-controls button{flex:0 0 auto;min-height:42px;padding:8px 10px;font-size:11px;background:#fff}
+
+  #welcome{top:49%;width:calc(100% - 24px);max-width:430px;padding:14px}
+  #welcome .file-icon{width:52px;height:60px;margin-bottom:18px}
+  #welcome h1{font-size:26px;line-height:1.08;margin:10px 0}
+  #welcome p{font-size:13px;line-height:1.5;margin:8px 0}
+  #welcome .primary{width:100%;max-width:300px;min-height:48px}
+  #welcome .privacy{font-size:11px;line-height:1.45;margin-top:12px}
+
+  .toolbar{left:8px;right:8px;bottom:10px;transform:none;width:auto;max-width:none;display:flex;flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;gap:2px;padding:4px;border-radius:10px;scrollbar-width:none;-webkit-overflow-scrolling:touch;z-index:5}
+  .toolbar::-webkit-scrollbar{display:none}
+  .toolbar .tool-group{flex:0 0 auto}
+  .toolbar button{flex:0 0 auto;min-height:42px;padding:8px 10px;font-size:11px}
+  .navigation{display:none!important}
+
+  #informationDock{flex:0 0 auto;display:block!important;max-height:43dvh;overflow:auto;border-top:1px solid #cedae0;-webkit-overflow-scrolling:touch}
+  #informationDock:not(:has(> :not([hidden]))){display:none!important}
+  #informationDock #selection.inspector{height:auto!important;min-height:0;max-height:none!important;overflow:visible}
+  #informationDock #status{max-height:none!important;padding:10px 12px;font-size:12px}
+  #informationDock #selection .inspector-head{padding:10px 12px}
+  #informationDock #selection .inspector-head h2{font-size:16px}
+  #informationDock #selection .element-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:8px 10px}
+  #informationDock #selection .element-actions button{width:100%;min-height:42px;font-size:11px}
+  #informationDock #selection #propertyBody{padding:10px 12px}
+  #informationDock #selection .property-summary{grid-template-columns:1fr 1fr}
+  #informationDock #selection #elementSection{grid-template-columns:1fr!important;margin:0;padding:10px 12px}
+  #dimensionPanel{margin:0!important;padding:10px 12px}
+  .dimension-views{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .dimension-views button{min-height:40px;width:100%}
+
+  /* Biblioteca de PDFs: lista sempre visível acima do leitor. */
+  #pdfDialog{height:100%!important;min-height:0;padding:8px!important;overflow:hidden}
+  #pdfDialog .dialog-head{gap:8px;padding-bottom:6px}
+  #pdfDialog .dialog-head h2{font-size:16px;line-height:1.25}
+  #closePDFs{min-height:42px;padding:8px 10px;font-size:12px}
+  #pdfDialog .pdf-layout{display:grid!important;grid-template-columns:1fr!important;grid-template-rows:minmax(190px,42%) minmax(0,58%);gap:8px;height:100%!important;min-height:0;overflow:hidden!important;margin-top:4px}
+  #pdfDialog .pdf-library{max-height:none!important;min-height:0;overflow:auto;padding:0 2px 8px 0;-webkit-overflow-scrolling:touch}
+  #pdfDialog .pdf-reader{min-height:0!important;overflow:hidden;border-top:1px solid #d8e2e6;padding-top:8px}
+  #uploadPDFs{width:100%;min-height:46px}
+  #pdfSearch,#pdfFloorFilter{min-height:44px;font-size:16px}
+  .pdf-list-title{margin-top:10px}
+  .pdf-library details{padding:10px;margin:7px 0}
+  .pdf-card button,.pdf-library details button{min-height:40px;padding:7px 9px;font-size:12px}.pdf-card-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.pdf-card-actions button{width:100%;white-space:normal;line-height:1.2}
+  .pdf-reader-tools{display:flex;flex-wrap:nowrap;overflow-x:auto;gap:5px;padding-bottom:5px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .pdf-reader-tools::-webkit-scrollbar{display:none}
+  .pdf-reader-tools button,.pdf-reader-tools a{flex:0 0 auto;min-height:40px;padding:7px 10px;font-size:11px}
+  #pdfPage{flex:0 0 auto;min-width:max-content;font-size:11px}
+  #pdfCanvasWrap{min-height:0;padding:8px;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  #pdfCanvas{max-width:none}
+
+  dialog{width:calc(100% - 16px);max-width:none;max-height:calc(100dvh - 16px);padding:16px;overflow:auto;border-radius:12px}
+  .dialog-head{position:sticky;top:-16px;z-index:2;background:#fff;padding:8px 0}
+  .dialog-head h2{font-size:19px}
+  .share-permission label{min-height:60px;padding:10px 6px}
+  .share-option{min-height:70px;padding:14px}
+  .share-link-row input{width:100%;min-height:44px}
+
+  footer{height:auto;min-height:28px;flex:none;padding:5px max(8px,env(safe-area-inset-right)) max(5px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));gap:8px;font-size:10px}
+  footer .developer-credit,footer #selectionStatus{display:none!important}
+  footer #count{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  footer .build-version{margin-left:auto;font-size:9px;white-space:nowrap}
+}
+
+@media(max-width:420px){
+  header{grid-template-columns:minmax(0,1fr) 1fr 1fr}
+  header #share,header .open{width:100%;padding:8px 7px!important;font-size:11px}
+  #welcome h1{font-size:23px}
+  .view-controls{left:58px}
+  .view-controls button{font-size:10px;padding:7px 8px}
+  #informationDock #selection .property-summary{grid-template-columns:1fr}
+  .dimension-views{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #pdfDialog .pdf-layout{grid-template-rows:minmax(180px,46%) minmax(0,54%)}
+}
+
+@media(orientation:landscape) and (max-height:520px) and (max-width:950px){
+  header{grid-template-columns:minmax(180px,1fr) auto auto auto;padding-top:5px;padding-bottom:5px}
+  header .brand{grid-column:1/2}
+  header #filename{grid-column:2/3;display:none}
+  header #share{grid-column:3/4}
+  header .open{grid-column:4/5}
+  #informationDock{max-height:48dvh}
+  #pdfDialog .pdf-layout{grid-template-columns:minmax(220px,38%) minmax(0,62%)!important;grid-template-rows:1fr!important}
+  #pdfDialog .pdf-library{max-height:none!important}
+}
+\n/* ===== GG minimal refinement · 16/09/2026 ===== */\n:root{\n  --gg-ink:#152a33;\n  --gg-ink-2:#324b56;\n  --gg-muted:#72858e;\n  --gg-line:#dbe3e7;\n  --gg-paper:#ffffff;\n  --gg-canvas:#f3f6f7;\n  --gg-accent:#b8653d;\n  --gg-accent-dark:#965033;\n  --gg-accent-soft:#f7eee9;\n}\nbody{background:var(--gg-canvas);color:var(--gg-ink)}\nheader{background:#10252d;border-bottom:1px solid #263c44;padding-left:24px;padding-right:24px;box-shadow:none}\n.brand{gap:11px}.mark{width:42px;height:42px;padding:0;display:grid;place-items:center;border-radius:9px;border:1px solid #60747c;color:#f3f6f7;background:#172f38;font-size:16px;letter-spacing:.6px}\n.brand strong{font-size:17px;font-weight:650;letter-spacing:-.25px}.brand small{font-size:10px;letter-spacing:1.45px;color:#9fb0b7;margin-top:4px}\n#filename{color:#aab9bf;font-size:13px}\nbutton{border-radius:9px;border-color:var(--gg-line);color:var(--gg-ink-2);box-shadow:none;transition:background .15s ease,border-color .15s ease,color .15s ease}\nbutton:hover:enabled{background:#f3f6f7;border-color:#cbd7dc}.primary{background:var(--gg-accent);border-color:var(--gg-accent);color:#fff}.primary:hover:enabled{background:var(--gg-accent-dark);border-color:var(--gg-accent-dark)}\nbutton:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #d99b7d;outline-offset:2px}\nheader>button:not(.primary){background:#172f38;border-color:#344b54;color:#dbe5e8}header>button:not(.primary):hover:enabled{background:#203a44;border-color:#4a626b}\naside{border-right-color:var(--gg-line);box-shadow:none}.eyebrow{color:#7c8e96;font-size:10px;letter-spacing:1.6px}h2{color:var(--gg-ink);font-weight:650}#layerSearch{background:#f7f9fa;border-color:var(--gg-line);border-radius:9px}\n#viewport{background:radial-gradient(circle at 50% 46%,#ffffff 0%,#f4f7f8 48%,#e9eef0 100%)}\n.background-brand{opacity:.035!important;filter:grayscale(1)}\n.file-icon{border-color:#bdcbd0;border-radius:12px;box-shadow:7px 7px 0 #e3eaed;color:#5b727c}\n#welcome{background:rgba(255,255,255,.7);border:1px solid rgba(219,227,231,.8);border-radius:18px;padding:28px 24px;backdrop-filter:blur(4px)}\n#welcome h1{color:var(--gg-ink);font-weight:520;letter-spacing:-1.3px}#welcome p{color:#70838c}.privacy{color:#87979e}\n.project-tabs{background:#fff;border-bottom-color:var(--gg-line)}.project-tabs button{border-radius:8px}.project-tabs button.active{background:#17313b!important;color:#fff!important;border-color:#17313b!important}\n.view-controls button,.toolbar{box-shadow:0 7px 24px #18303a12}.toolbar{border-color:var(--gg-line);border-radius:12px}.toolbar .active{background:#eef3f5;color:#17313b}\n#selection.inspector{border-color:var(--gg-line);box-shadow:0 18px 44px #18303a1c}.inspector-head{background:#f7f9fa}.metric{background:#fff;border-color:#e1e8eb}.metric strong{color:var(--gg-ink)}\ndialog{border-color:var(--gg-line);box-shadow:0 28px 80px #10252d30;border-radius:16px}dialog::backdrop{background:#10252d70}.share-option{background:#fafbfb;border-color:var(--gg-line);border-radius:12px}.share-option strong{color:var(--gg-ink)}.share-option.is-uploading{border-color:var(--gg-accent);background:var(--gg-accent-soft)}\n.share-progress-bar{background:var(--gg-accent)}input{accent-color:var(--gg-accent)}.view-controls .active{border-color:var(--gg-accent);color:var(--gg-accent-dark)}\n.pdf-library details{border-color:var(--gg-line);box-shadow:none;border-radius:12px}.pdf-list-title strong{color:var(--gg-ink)}\nfooter{border-top-color:var(--gg-line);color:#819099;background:#fbfcfc}.developer-credit{color:#657a84}\n@media(max-width:760px){\n  header{background:#10252d;padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}\n  header .brand{grid-column:1/-1}.brand strong{font-size:15px}.brand small{font-size:9px}.mark{display:grid!important;width:34px;height:34px;border-radius:8px}\n  #welcome{padding:18px 14px;background:rgba(255,255,255,.78);border-radius:14px}\n  .view-controls button,.toolbar button{border-radius:8px}\n}\n
 
 /* ===== Mobile-first visualization refinement · 24/09/2026 ===== */
 .inspector-head-actions{display:flex;align-items:center;gap:6px;flex:0 0 auto}
 .mobile-inspector-toggle{display:none}
-
 @media(max-width:760px){
-  html,body{width:100%;height:100%;min-height:100%;overflow:hidden}
-  body{min-height:100dvh;display:flex;flex-direction:column;background:#eef3f5}
-  header{height:58px!important;min-height:58px!important;display:flex!important;align-items:center!important;flex:none!important;gap:6px!important;padding:max(6px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) 6px max(8px,env(safe-area-inset-left))!important}
-  header .brand{grid-column:auto!important;min-width:0!important;flex:1 1 auto!important;gap:7px!important;overflow:hidden}
-  header .mark{display:none!important}
-  header .brand>div{min-width:0}
-  header .brand strong{display:block;font-size:13px!important;line-height:1.12;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  header .brand small{font-size:8px!important;letter-spacing:1.1px!important;margin-top:2px!important;white-space:nowrap}
-  header #filename{display:none!important}
-  header #share,header .open{flex:0 0 auto;min-height:40px!important;height:40px!important;padding:7px 9px!important;font-size:11px!important;white-space:nowrap}
-  #projectPDFs{display:none!important}
-  footer{display:none!important}
-
-  main{display:block!important;position:relative;flex:1 1 auto!important;height:auto!important;min-height:0!important;overflow:hidden!important}
-  #projectWorkspace{height:100%!important;min-height:0!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
-  .project-tabs{height:44px;min-height:44px;flex:0 0 44px;padding:4px 7px!important;gap:5px!important;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-  .project-tabs::-webkit-scrollbar{display:none}
-  .project-tabs button{min-height:36px!important;height:36px;padding:6px 12px!important;font-size:12px!important;flex:0 0 auto;white-space:nowrap}
-
-  main>aside{position:absolute!important;z-index:50!important;inset:0 auto 0 0!important;width:min(88vw,330px)!important;max-height:none!important;padding:16px 14px 28px!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch;background:#fff;box-shadow:8px 0 30px #18323c30}
-  body.sidebar-hidden main>aside{display:block!important;transform:translateX(-105%)!important;pointer-events:none!important;box-shadow:none!important}
-  body:not(.sidebar-hidden) #projectWorkspace:after{content:"";position:absolute;inset:0;z-index:44;background:#10252d4d;pointer-events:none}
-  #layers{max-height:38dvh!important}
-
-  #projectWorkspace #viewport{flex:1 1 auto!important;height:auto!important;min-height:220px!important;overflow:hidden}
-  #viewport{min-height:220px!important}
-  .view-label{top:7px!important;left:7px!important;z-index:46!important}
-  .view-label #sidebarToggle{width:44px!important;height:44px!important;min-height:44px!important;padding:0!important;font-size:20px!important;background:#fff;box-shadow:0 2px 10px #243b4422}
-  #viewName{display:none!important}
-  .view-controls{top:7px!important;left:57px!important;right:7px!important;max-width:none!important;display:flex!important;flex-wrap:nowrap!important;justify-content:flex-start!important;overflow-x:auto!important;gap:4px!important;padding:0 0 4px!important;scrollbar-width:none;-webkit-overflow-scrolling:touch;z-index:45!important}
-  .view-controls::-webkit-scrollbar{display:none}
-  .view-controls button{flex:0 0 auto!important;min-height:40px!important;height:40px!important;padding:7px 9px!important;font-size:10px!important;background:#fff}
-
-  .toolbar{left:7px!important;right:7px!important;bottom:7px!important;transform:none!important;width:auto!important;max-width:none!important;display:flex!important;flex-wrap:nowrap!important;justify-content:flex-start!important;overflow-x:auto!important;gap:2px!important;padding:3px!important;scrollbar-width:none;-webkit-overflow-scrolling:touch;z-index:45!important}
-  .toolbar::-webkit-scrollbar{display:none}
-  .toolbar .tool-group{flex:0 0 auto!important;padding-right:2px!important;margin-right:2px!important}
-  .toolbar button{flex:0 0 auto!important;min-height:40px!important;height:40px!important;padding:7px 9px!important;font-size:10px!important}
-  .navigation{display:none!important}
-
-  #informationDock{flex:0 0 auto!important;display:block!important;max-height:none!important;overflow:visible!important;background:#fff;border-top:1px solid #ccd8dd;z-index:40}
-  #informationDock:not(:has(> :not([hidden]))){display:none!important}
-  #informationDock #selection.inspector{position:relative!important;inset:auto!important;width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;border:0!important;border-radius:0!important;box-shadow:0 -7px 22px #17323c14!important;overflow:hidden!important;background:#fff}
-  #selection:not(.mobile-expanded){max-height:116px!important}
-  body.dimensions-active #selection:not(.mobile-expanded){max-height:252px!important}
-  #selection.mobile-expanded{max-height:min(44dvh,370px)!important;overflow:auto!important;-webkit-overflow-scrolling:touch}
-
-  #informationDock #selection .inspector-head{min-height:53px;padding:8px 10px!important;align-items:center!important;background:#f8fafb}
-  #informationDock #selection .inspector-head>div:first-child{min-width:0;flex:1}
-  #informationDock #selection .inspector-head .eyebrow{display:none!important}
-  #informationDock #selection .inspector-head h2{font-size:15px!important;line-height:1.15!important;margin:0 0 3px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  #informationDock #selection .inspector-head p{font-size:10px!important;line-height:1.2!important;margin:0!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .inspector-head-actions{gap:4px}
-  .mobile-inspector-toggle{display:inline-flex!important;align-items:center;justify-content:center;min-height:38px!important;height:38px!important;padding:6px 9px!important;font-size:11px!important;border:1px solid #d6e1e5!important;background:#fff!important}
-  #closeProperties{width:38px;height:38px;min-height:38px!important;padding:0!important;font-size:22px!important}
-
-  #informationDock #selection .element-actions{display:flex!important;flex-wrap:nowrap!important;gap:5px!important;padding:6px 8px!important;overflow-x:auto!important;scrollbar-width:none;-webkit-overflow-scrolling:touch;border-bottom:0!important}
-  #informationDock #selection .element-actions::-webkit-scrollbar{display:none}
-  #informationDock #selection .element-actions button{flex:0 0 auto!important;min-height:43px!important;height:43px!important;min-width:104px!important;padding:7px 9px!important;font-size:11px!important}
-  #selection:not(.mobile-expanded) #hideElement,#selection:not(.mobile-expanded) #popout{display:none!important}
-  #selection:not(.mobile-expanded) #propertyBody{display:none!important}
-  #selection.mobile-expanded #propertyBody{display:block!important;max-height:25dvh!important;overflow:auto!important;padding:9px 11px!important;-webkit-overflow-scrolling:touch}
-  #selection.mobile-expanded .element-row{padding:9px 0!important}
-  #selection.mobile-expanded .element-row dt{font-size:11px!important}
-  #selection.mobile-expanded .element-row dd{font-size:13px!important}
-
-  #selection #elementSection{margin:0!important;padding:9px 11px!important;grid-template-columns:1fr!important;gap:6px!important}
-  #selection #elementSection label{margin-top:8px!important}
-  #selection #elementSection select{min-height:42px;font-size:14px}
-
-  #dimensionPanel{margin:0!important;padding:9px 10px 10px!important;background:#edf6f9!important;border-top:1px solid #d2e1e7!important;border-bottom:0!important}
-  .dimension-head{font-size:13px!important}
-  .dimension-head strong{font-size:13px!important}
-  .dimension-head button{min-height:36px!important;padding:5px 8px!important;font-size:10px!important}
-  #dimensionValues{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px!important;margin:7px 0!important}
-  #dimensionValues span{display:flex;align-items:center;justify-content:center;min-height:38px;padding:6px 5px!important;border:1px solid #d5e4e9;border-radius:7px!important;font-size:14px!important;font-weight:750!important;color:#0f536d!important;white-space:nowrap}
-  #dimensionPanel small{font-size:9px!important;line-height:1.25!important;margin-top:3px}
-  .dimension-views{display:flex!important;flex-wrap:nowrap!important;gap:4px!important;margin-top:7px!important;overflow-x:auto!important;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-  .dimension-views::-webkit-scrollbar{display:none}
-  .dimension-views button{flex:0 0 auto!important;min-height:38px!important;height:38px!important;min-width:68px!important;padding:5px 8px!important;font-size:10px!important}
-
-  #informationDock:has(#selection:not([hidden])) #status{display:none!important}
-
-  #welcome{top:50%!important;width:calc(100% - 20px)!important;max-width:390px!important;padding:13px 12px!important}
-  #welcome .file-icon{width:46px!important;height:54px!important;margin-bottom:12px!important}
-  #welcome h1{font-size:23px!important;line-height:1.08!important;margin:8px 0!important}
-  #welcome p{font-size:12px!important;line-height:1.4!important;margin:7px 0!important}
-  #welcome .privacy{font-size:10px!important;line-height:1.35!important;margin-top:9px!important}
-
-  #projectWorkspace.pdf-active #informationDock{display:none!important}
-  #pdfDialog{height:100%!important;min-height:0!important;padding:7px!important}
-  #pdfDialog .dialog-head h2{font-size:15px!important}
-  #pdfDialog .pdf-layout{grid-template-rows:minmax(160px,38%) minmax(0,62%)!important;gap:6px!important}
-  #pdfDialog .pdf-library{font-size:12px}
-  #pdfDialog .pdf-reader-tools button,#pdfDialog .pdf-reader-tools a{min-height:38px!important;height:38px!important}
-  dialog{max-height:calc(100dvh - 12px)!important}
+ html,body{width:100%;height:100%;min-height:100%;overflow:hidden}
+ body{min-height:100dvh;display:flex;flex-direction:column;background:#eef3f5}
+ header{height:58px!important;min-height:58px!important;display:flex!important;align-items:center!important;flex:none!important;gap:6px!important;padding:max(6px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) 6px max(8px,env(safe-area-inset-left))!important}
+ header .brand{min-width:0!important;flex:1 1 auto!important;gap:7px!important;overflow:hidden}
+ header .mark{display:none!important} header .brand>div{min-width:0}
+ header .brand strong{display:block;font-size:13px!important;line-height:1.12;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ header .brand small{font-size:8px!important;letter-spacing:1.1px!important;margin-top:2px!important;white-space:nowrap}
+ header #filename{display:none!important}
+ header #share,header .open{flex:0 0 auto;min-height:40px!important;height:40px!important;padding:7px 9px!important;font-size:11px!important;white-space:nowrap}
+ #projectPDFs{display:none!important} footer{display:none!important}
+ main{display:block!important;position:relative;flex:1 1 auto!important;height:auto!important;min-height:0!important;overflow:hidden!important}
+ #projectWorkspace{height:100%!important;min-height:0!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
+ .project-tabs{height:44px;min-height:44px;flex:0 0 44px;padding:4px 7px!important;gap:5px!important;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+ .project-tabs::-webkit-scrollbar{display:none}.project-tabs button{min-height:36px!important;height:36px;padding:6px 12px!important;font-size:12px!important;flex:0 0 auto;white-space:nowrap}
+ main>aside{position:absolute!important;z-index:50!important;inset:0 auto 0 0!important;width:min(88vw,330px)!important;max-height:none!important;padding:16px 14px 28px!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch;background:#fff;box-shadow:8px 0 30px #18323c30}
+ body.sidebar-hidden main>aside{display:block!important;transform:translateX(-105%)!important;pointer-events:none!important;box-shadow:none!important}
+ body:not(.sidebar-hidden) #projectWorkspace:after{content:"";position:absolute;inset:0;z-index:44;background:#10252d4d;pointer-events:none}
+ #layers{max-height:38dvh!important}
+ #projectWorkspace #viewport{flex:1 1 auto!important;height:auto!important;min-height:220px!important;overflow:hidden}
+ #viewport{min-height:220px!important}
+ .view-label{top:7px!important;left:7px!important;z-index:46!important}.view-label #sidebarToggle{width:44px!important;height:44px!important;min-height:44px!important;padding:0!important;font-size:20px!important;background:#fff;box-shadow:0 2px 10px #243b4422}
+ #viewName{display:none!important}
+ .view-controls{top:7px!important;left:57px!important;right:7px!important;max-width:none!important;display:flex!important;flex-wrap:nowrap!important;justify-content:flex-start!important;overflow-x:auto!important;gap:4px!important;padding:0 0 4px!important;scrollbar-width:none;-webkit-overflow-scrolling:touch;z-index:45!important}
+ .view-controls::-webkit-scrollbar{display:none}.view-controls button{flex:0 0 auto!important;min-height:40px!important;height:40px!important;padding:7px 9px!important;font-size:10px!important;background:#fff}
+ .toolbar{left:7px!important;right:7px!important;bottom:7px!important;transform:none!important;width:auto!important;max-width:none!important;display:flex!important;flex-wrap:nowrap!important;justify-content:flex-start!important;overflow-x:auto!important;gap:2px!important;padding:3px!important;scrollbar-width:none;-webkit-overflow-scrolling:touch;z-index:45!important}
+ .toolbar::-webkit-scrollbar{display:none}.toolbar .tool-group{flex:0 0 auto!important;padding-right:2px!important;margin-right:2px!important}.toolbar button{flex:0 0 auto!important;min-height:40px!important;height:40px!important;padding:7px 9px!important;font-size:10px!important}
+ .navigation{display:none!important}
+ #informationDock{flex:0 0 auto!important;display:block!important;max-height:none!important;overflow:visible!important;background:#fff;border-top:1px solid #ccd8dd;z-index:40}
+ #informationDock:not(:has(> :not([hidden]))){display:none!important}
+ #informationDock #selection.inspector{position:relative!important;inset:auto!important;width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;border:0!important;border-radius:0!important;box-shadow:0 -7px 22px #17323c14!important;overflow:hidden!important;background:#fff}
+ #selection:not(.mobile-expanded){max-height:116px!important} body.dimensions-active #selection:not(.mobile-expanded){max-height:252px!important}
+ #selection.mobile-expanded{max-height:min(44dvh,370px)!important;overflow:auto!important;-webkit-overflow-scrolling:touch}
+ #informationDock #selection .inspector-head{min-height:53px;padding:8px 10px!important;align-items:center!important;background:#f8fafb}
+ #informationDock #selection .inspector-head>div:first-child{min-width:0;flex:1}
+ #informationDock #selection .inspector-head .eyebrow{display:none!important}
+ #informationDock #selection .inspector-head h2{font-size:15px!important;line-height:1.15!important;margin:0 0 3px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ #informationDock #selection .inspector-head p{font-size:10px!important;line-height:1.2!important;margin:0!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .inspector-head-actions{gap:4px}.mobile-inspector-toggle{display:inline-flex!important;align-items:center;justify-content:center;min-height:38px!important;height:38px!important;padding:6px 9px!important;font-size:11px!important;border:1px solid #d6e1e5!important;background:#fff!important}
+ #closeProperties{width:38px;height:38px;min-height:38px!important;padding:0!important;font-size:22px!important}
+ #informationDock #selection .element-actions{display:flex!important;flex-wrap:nowrap!important;gap:5px!important;padding:6px 8px!important;overflow-x:auto!important;scrollbar-width:none;-webkit-overflow-scrolling:touch;border-bottom:0!important}
+ #informationDock #selection .element-actions::-webkit-scrollbar{display:none}
+ #informationDock #selection .element-actions button{flex:0 0 auto!important;min-height:43px!important;height:43px!important;min-width:104px!important;padding:7px 9px!important;font-size:11px!important}
+ #selection:not(.mobile-expanded) #hideElement,#selection:not(.mobile-expanded) #popout{display:none!important}
+ #selection:not(.mobile-expanded) #propertyBody{display:none!important}
+ #selection.mobile-expanded #propertyBody{display:block!important;max-height:25dvh!important;overflow:auto!important;padding:9px 11px!important;-webkit-overflow-scrolling:touch}
+ #selection #elementSection{margin:0!important;padding:9px 11px!important;grid-template-columns:1fr!important;gap:6px!important}
+ #dimensionPanel{margin:0!important;padding:9px 10px 10px!important;background:#edf6f9!important;border-top:1px solid #d2e1e7!important;border-bottom:0!important}
+ .dimension-head{font-size:13px!important}.dimension-head strong{font-size:13px!important}.dimension-head button{min-height:36px!important;padding:5px 8px!important;font-size:10px!important}
+ #dimensionValues{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px!important;margin:7px 0!important}
+ #dimensionValues span{display:flex;align-items:center;justify-content:center;min-height:38px;padding:6px 5px!important;border:1px solid #d5e4e9;border-radius:7px!important;font-size:14px!important;font-weight:750!important;color:#0f536d!important;white-space:nowrap}
+ #dimensionPanel small{font-size:9px!important;line-height:1.25!important;margin-top:3px}
+ .dimension-views{display:flex!important;flex-wrap:nowrap!important;gap:4px!important;margin-top:7px!important;overflow-x:auto!important;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+ .dimension-views::-webkit-scrollbar{display:none}.dimension-views button{flex:0 0 auto!important;min-height:38px!important;height:38px!important;min-width:68px!important;padding:5px 8px!important;font-size:10px!important}
+ #informationDock:has(#selection:not([hidden])) #status{display:none!important}
+ #welcome{top:50%!important;width:calc(100% - 20px)!important;max-width:390px!important;padding:13px 12px!important}
+ #welcome h1{font-size:23px!important;line-height:1.08!important;margin:8px 0!important}#welcome p{font-size:12px!important;line-height:1.4!important;margin:7px 0!important}
+ #projectWorkspace.pdf-active #informationDock{display:none!important}
+ #pdfDialog{height:100%!important;min-height:0!important;padding:7px!important}
+ #pdfDialog .pdf-layout{grid-template-rows:minmax(160px,38%) minmax(0,62%)!important;gap:6px!important}
 }
-
 @media(max-width:420px){
-  header{height:54px!important;min-height:54px!important}
-  header .brand strong{font-size:12px!important}
-  header .brand small{font-size:7.5px!important}
-  header #share,header .open{min-height:38px!important;height:38px!important;padding:6px 7px!important;font-size:10px!important}
-  .project-tabs{height:42px;min-height:42px;flex-basis:42px}
-  .project-tabs button{height:34px!important;min-height:34px!important;font-size:11px!important}
-  #selection:not(.mobile-expanded){max-height:112px!important}
-  body.dimensions-active #selection:not(.mobile-expanded){max-height:245px!important}
-  #dimensionValues span{font-size:13px!important}
+ header{height:54px!important;min-height:54px!important}header .brand strong{font-size:12px!important}header #share,header .open{min-height:38px!important;height:38px!important;padding:6px 7px!important;font-size:10px!important}
+ .project-tabs{height:42px;min-height:42px;flex-basis:42px}.project-tabs button{height:34px!important;min-height:34px!important;font-size:11px!important}
+ #selection:not(.mobile-expanded){max-height:112px!important}body.dimensions-active #selection:not(.mobile-expanded){max-height:245px!important}#dimensionValues span{font-size:13px!important}
 }
-
 @media(orientation:landscape) and (max-height:520px) and (max-width:950px){
-  header{height:50px!important;min-height:50px!important}
-  header .brand small{display:none!important}
-  #selection:not(.mobile-expanded){max-height:104px!important}
-  body.dimensions-active #selection:not(.mobile-expanded){max-height:214px!important}
-  #selection.mobile-expanded{max-height:48dvh!important}
-  #dimensionPanel small{display:none!important}
+ header{height:50px!important;min-height:50px!important}header .brand small{display:none!important}
+ #selection:not(.mobile-expanded){max-height:104px!important}body.dimensions-active #selection:not(.mobile-expanded){max-height:214px!important}#selection.mobile-expanded{max-height:48dvh!important}#dimensionPanel small{display:none!important}
 }
