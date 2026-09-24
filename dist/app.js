@@ -1,11 +1,8 @@
 import { createInspector } from './properties.js';
 const $=id=>document.getElementById(id);
-const PUBLIC_VIEWER_ORIGIN='https://visualizar-gustavo-gil-20260915-222909-8602.netlify.app';
-const urlParams=new URLSearchParams(location.search),sharedId=urlParams.get('share'),embedded=$('embeddedIFC'),sharedMode=Boolean(sharedId||embedded);
-let readOnlyMode=Boolean(embedded),trustedReadOnlyLoad=false,sharePermission=embedded?'view':'edit';
+const urlParams=new URLSearchParams(location.search),pathShare=(location.pathname.match(/^\/projeto\/([a-f0-9]{32})\/?$/i)||[])[1],sharedId=(pathShare||urlParams.get('share')||'').toLowerCase(),embedded=$('embeddedIFC'),sharedMode=true;
+let readOnlyMode=true,trustedReadOnlyLoad=false,sharePermission='view';
 let T,Orbit,api,scene,camera,renderer,controls,model,box,grid,busy=false,axis='z',sign=1,selected=null;let W,apiReady=false,currentModelID=null,inspector=null,currentFile=null,propertyWindow=null,selectionRevision=0,isolatedID=null,transition=null;const hiddenIDs=new Set();let elementInfo=null;const propertyCache=new Map();const categories=new Map();let meshes=[];
-const mobileLayout=()=>Boolean(window.matchMedia?.('(max-width:760px)').matches);
-function setMobileInspectorExpanded(expanded){const panel=$('selection'),toggle=$('mobileInspectorToggle');if(!panel)return;panel.classList.toggle('mobile-expanded',Boolean(expanded));if(toggle){toggle.setAttribute('aria-expanded',String(Boolean(expanded)));toggle.textContent=expanded?'Menos':'Dados';}}
 const status=(message)=>{$('status').textContent=message;$('status').hidden=!message};
 const labels={IFCREINFORCINGBAR:'Armaduras · barras',IFCREINFORCINGMESH:'Armaduras · telas',IFCTENDON:'Tendões',IFCTENDONANCHOR:'Ancoragens',IFCBEAM:'Vigas',IFCCOLUMN:'Pilares',IFCSLAB:'Lajes',IFCWALL:'Paredes',IFCWALLSTANDARDCASE:'Paredes',IFCFOOTING:'Fundações',IFCPILE:'Estacas',IFCSTAIR:'Escadas',IFCDOOR:'Portas',IFCWINDOW:'Janelas',IFCROOF:'Coberturas',IFCBUILDINGELEMENTPROXY:'Outros elementos',IFCCOVERING:'Revestimentos',IFCMEMBER:'Membros estruturais',IFCPLATE:'Placas',IFCPIPESEGMENT:'Tubulações'};
 function hideBrandIntro(){if($('brandIntro'))$('brandIntro').hidden=true;}
@@ -24,9 +21,11 @@ function applyAccessUI(){
 function editableReady(){readOnlyMode=false;sharePermission='edit';applyAccessUI();hideBrandIntro();status('');}
 function viewerReady(){readOnlyMode=true;sharePermission='view';applyAccessUI();hideBrandIntro();}
 async function initAccess(){
- if(embedded){viewerReady();return;}
- if(sharedId){viewerReady();return;}
- editableReady();
+ viewerReady();
+ if(!sharedId&&!embedded){
+  const welcome=$('welcome');if(welcome){welcome.hidden=false;const h=welcome.querySelector('h1'),p=welcome.querySelector('p');if(h)h.textContent='Link de projeto inválido ou não informado.';if(p)p.textContent='Abra o endereço de compartilhamento recebido para visualizar o projeto.';const hint=welcome.querySelector('.hint');if(hint)hint.textContent='Este endereço é somente para visualização de projetos compartilhados.';const privacy=welcome.querySelector('.privacy');if(privacy)privacy.textContent='Nenhum arquivo pode ser enviado ou substituído por esta página.';}
+  status('Informe um link de projeto válido.');
+ }
 }
 if($('brandEnter'))$('brandEnter').onclick=hideBrandIntro;
 applyAccessUI();
@@ -37,13 +36,13 @@ async function select(mesh){
   const revision=++selectionRevision;
   if(selected)for(const m of meshes)if(m.userData.id===selected.userData.id)m.material.emissive.setHex(0);
   if(dimensionData&&dimensionData.hostID!==mesh?.userData.id)clearDimensions();
-  selected=mesh||null;elementInfo=null;$('selection').hidden=!mesh;if(mobileLayout())setMobileInspectorExpanded(false);
+  selected=mesh||null;elementInfo=null;$('selection').hidden=!mesh;
   if(!mesh){$('selectionStatus').textContent='Clique em um elemento para inspecionar';if(propertyWindow&&!propertyWindow.closed)propertyWindow.document.body.textContent='Nenhum elemento selecionado.';return;}
-  for(const m of meshes)if(m.userData.id===mesh.userData.id)m.material.emissive.setHex(mobileLayout()?0x8a4c2d:0x635035);
+  for(const m of meshes)if(m.userData.id===mesh.userData.id)m.material.emissive.setHex(0x635035);
   $('elementName').textContent=mesh.userData.name||'Elemento IFC';$('elementType').textContent=(labels[mesh.userData.type]||mesh.userData.type)+' · #'+mesh.userData.id;
   $('selectionStatus').textContent='Selecionado: #'+mesh.userData.id;$('propertyBody').textContent='Lendo propriedades do IFC…';
   await new Promise(r=>setTimeout(r,25));if(revision!==selectionRevision)return;
-  try{if(!propertyCache.has(mesh.userData.id))propertyCache.set(mesh.userData.id,inspector.read(mesh.userData.id));elementInfo=propertyCache.get(mesh.userData.id);$('elementName').textContent=elementInfo.name;$('elementType').textContent=(labels[elementInfo.type]||elementInfo.type)+' · #'+elementInfo.id;renderProperties();if(mobileLayout()&&revision===selectionRevision){requestAnimationFrame(()=>requestAnimationFrame(()=>{if(selected===mesh)focusSelected()}));}}catch(e){$('propertyBody').textContent='Não foi possível ler as propriedades deste elemento.';console.error(e)}
+  try{if(!propertyCache.has(mesh.userData.id))propertyCache.set(mesh.userData.id,inspector.read(mesh.userData.id));elementInfo=propertyCache.get(mesh.userData.id);$('elementName').textContent=elementInfo.name;$('elementType').textContent=(labels[elementInfo.type]||elementInfo.type)+' · #'+elementInfo.id;renderProperties();}catch(e){$('propertyBody').textContent='Não foi possível ler as propriedades deste elemento.';console.error(e)}
 }
 function dispose(group){if(!group)return;const geometries=new Set();group.traverse(m=>{if(m.geometry&&!geometries.has(m.geometry)){geometries.add(m.geometry);m.geometry.dispose();}if(m.material){if(Array.isArray(m.material))m.material.forEach(x=>x.dispose());else m.material.dispose()}});scene?.remove(group)}
 function fit(view='iso',targetBox=null,animate=true){
@@ -140,7 +139,7 @@ function frameSection(){
  camera.up.copy(f.v);camera.position.copy(center).addScaledVector(f.n,Math.max(f.hi[0]-f.lo[0],span)*2+1);controls.target.copy(center);camera.userData.span=span*1.5/Math.min(aspect,1);camera.zoom=1;camera.near=.0001;camera.far=Math.max(box.getSize(new T.Vector3()).length()*10,100);resizeCamera(aspect);camera.updateProjectionMatrix();controls.update();
 }
 function openElementSection(){
- if(!selected||!elementInfo)return;if(mobileLayout())setMobileInspectorExpanded(true);
+ if(!selected||!elementInfo)return;
  const info=elementInfo;
  clearDimensions();
  if(elementSection)closeElementSection();
@@ -175,12 +174,12 @@ function measureElement(hostID){
 function dimensionPoint(data,coords){return data.origin.clone().addScaledVector(data.basis[0],coords[0]).addScaledVector(data.basis[1],coords[1]).addScaledVector(data.basis[2],coords[2]);}
 const measureText=value=>new Intl.NumberFormat('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:2}).format(value*100)+' cm';
 function dimensionLabel(text,position,size){
- const canvas=document.createElement('canvas');canvas.width=768;canvas.height=128;const ctx=canvas.getContext('2d');ctx.fillStyle='rgba(255,255,255,.97)';ctx.fillRect(0,0,768,128);ctx.strokeStyle='rgba(30,91,112,.22)';ctx.lineWidth=3;ctx.strokeRect(2,2,764,124);ctx.font=(mobileLayout()?'700 58px Arial':'700 52px Arial');ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#0f536d';ctx.fillText(text,384,64);
- const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;const sprite=new T.Sprite(new T.SpriteMaterial({map:texture,depthTest:false,depthWrite:false}));sprite.position.copy(position);sprite.scale.set(size*6,size,1);sprite.renderOrder=30;dimensionGroup.add(sprite);
+ const canvas=document.createElement('canvas');canvas.width=640;canvas.height=100;const ctx=canvas.getContext('2d');ctx.fillStyle='rgba(255,255,255,.96)';ctx.fillRect(0,0,640,100);ctx.font='600 42px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#14536a';ctx.fillText(text,320,50);
+ const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;const sprite=new T.Sprite(new T.SpriteMaterial({map:texture,depthTest:false,depthWrite:false}));sprite.position.copy(position);sprite.scale.set(size*6.4,size,1);sprite.renderOrder=30;dimensionGroup.add(sprite);
 }
 function buildDimensions(hostID){
  clearDimensions();const data=measureElement(hostID);if(!data)return;dimensionData=data;dimensionGroup=new T.Group();scene.add(dimensionGroup);
- const max=Math.max(...data.values,.1),offset=max*.11,labelHeight=max*(mobileLayout()?.042:.034);
+ const max=Math.max(...data.values,.1),offset=max*.10,labelHeight=max*.027;
  for(let i=0;i<3;i++){
   const start=[...data.lo],end=[...data.lo],j=(i+1)%3;start[j]-=offset;end[j]-=offset;end[i]=data.hi[i];
   const a=dimensionPoint(data,start),b=dimensionPoint(data,end),refA=[...start],refB=[...end];refA[j]=refB[j]=data.lo[j];
@@ -193,7 +192,7 @@ function buildDimensions(hostID){
  $('dimensionPanel').hidden=false;document.body.classList.add('dimensions-active');
 }
 function isolateAndDimension(){
- if(!selected||!elementInfo)return;const info=elementInfo;if(mobileLayout())setMobileInspectorExpanded(false);
+ if(!selected||!elementInfo)return;const info=elementInfo;
  if(info.unresolvedSteel){status('Selecione o elemento de concreto para cotar suas dimensões.');return;}
  if(elementSection)closeElementSection();
  try{isolatedID=info.id;hiddenIDs.clear();categories.forEach(c=>c.visible=true);$('cut').checked=false;$('opacity').value=0;changeProjection(true);layerUI();update();buildDimensions(info.id);dimensionView('iso');status('Cotas medidas na geometria. As propriedades declaradas no IFC permanecem separadas.');}catch(e){clearDimensions();status(e.message)}
@@ -230,7 +229,7 @@ function changeProjection(orthographic){
 }
 function navigationMode(pan){if(!controls)return;controls.mouseButtons.LEFT=pan?T.MOUSE.PAN:T.MOUSE.ROTATE;controls.touches.ONE=pan?T.TOUCH.PAN:T.TOUCH.ROTATE;for(const id of ['pan','orbit']){const active=(id==='pan')===pan;$(id).classList.toggle('active',active);$(id).setAttribute('aria-pressed',String(active))}$('canvas').style.cursor=pan?'move':'grab'}
 function zoom(factor){if(!camera)return;transition=null;if(camera.isOrthographicCamera){camera.zoom=T.MathUtils.clamp(camera.zoom/factor,.05,1000);camera.updateProjectionMatrix()}else{camera.position.sub(controls.target).multiplyScalar(factor).add(controls.target)}controls.update()}
-if($('mobileInspectorToggle'))$('mobileInspectorToggle').onclick=()=>setMobileInspectorExpanded(!$('selection').classList.contains('mobile-expanded'));$('closeProperties').onclick=()=>{if(elementSection)closeElementSection();setMobileInspectorExpanded(false);select(null)};$('focusElement').onclick=focusSelected;$('isolateElement').onclick=isolateAndDimension;$('hideElement').onclick=()=>{if(selected){hiddenIDs.add(selected.userData.id);select(null);update()}};
+$('closeProperties').onclick=()=>{if(elementSection)closeElementSection();select(null)};$('focusElement').onclick=focusSelected;$('isolateElement').onclick=isolateAndDimension;$('hideElement').onclick=()=>{if(selected){hiddenIDs.add(selected.userData.id);select(null);update()}};
 $('popout').onclick=()=>{propertyWindow=window.open('','ifc-element-properties','popup,width=520,height=760');if(!propertyWindow){status('O navegador bloqueou a nova janela. Permita pop-ups ou use o painel de propriedades.');return}propertyWindow.document.body.textContent='Carregando propriedades…';if(elementInfo)syncPropertyWindow();propertyWindow.focus()};
 $('layerSearch').oninput=layerUI;$('sidebarToggle').onclick=()=>{document.body.classList.toggle('sidebar-hidden');$('sidebarToggle').setAttribute('aria-expanded',String(!document.body.classList.contains('sidebar-hidden')))};
 if(window.matchMedia?.('(max-width:760px)').matches){document.body.classList.add('sidebar-hidden');$('sidebarToggle').setAttribute('aria-expanded','false');}
@@ -240,7 +239,7 @@ $('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await docume
 document.addEventListener('keydown',e=>{if(/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)||$('shareDialog').open||$('pdfDialog').open)return;if(e.key==='Escape'){select(null);return}if(!model)return;if(e.key.toLowerCase()==='f'){e.preventDefault();selected?focusSelected():fit()}if(e.key.toLowerCase()==='g')navigationMode(false);if(e.key.toLowerCase()==='m')navigationMode(true)});
 function setShareProgress(percent,text=''){const wrap=$('shareProgress'),bar=$('shareProgressBar'),label=$('shareProgressText');if(!wrap||!bar||!label)return;const value=Math.max(0,Math.min(100,Number(percent)||0));wrap.hidden=false;bar.style.width=value+'%';label.textContent=text||Math.round(value)+'%';}
 function resetShareProgress(){if($('shareProgress'))$('shareProgress').hidden=true;if($('shareProgressBar'))$('shareProgressBar').style.width='0%';if($('shareProgressText'))$('shareProgressText').textContent='Preparando…';}
-$('share').onclick=async()=>{if(readOnlyMode)return;$('shareDialog').showModal();resetShareProgress();$('shareLinkRow').hidden=true;$('shareStatus').textContent='Verificando compartilhamento…';try{const r=await fetch('/api/share?health=1',{cache:'no-store'});const body=await r.json().catch(()=>({}));if(!r.ok||!body.ok)throw Error(body.detail||body.error||'Serviço indisponível');$('shareStatus').textContent='Pronto para criar o link.';}catch(error){$('shareStatus').textContent='Compartilhamento indisponível: '+(error.message||'erro desconhecido');}};$('closeShare').onclick=()=>$('shareDialog').close();
+$('share').onclick=async()=>{if(readOnlyMode)return;$('shareDialog').showModal();resetShareProgress();$('shareLinkRow').hidden=true;$('shareStatus').textContent='Verificando compartilhamento…';try{const r=await fetch('/api/view?health=1',{cache:'no-store'});const body=await r.json().catch(()=>({}));if(!r.ok||!body.ok)throw Error(body.detail||body.error||'Serviço indisponível');$('shareStatus').textContent='Pronto para criar o link.';}catch(error){$('shareStatus').textContent='Compartilhamento indisponível: '+(error.message||'erro desconhecido');}};$('closeShare').onclick=()=>$('shareDialog').close();
 
 function apiError(response, fallback='Não foi possível concluir o compartilhamento.'){
  if(response.ok)return null;
@@ -263,18 +262,18 @@ async function createShareLink(){
  if(!currentFile){$('shareStatus').textContent='Abra um IFC antes de criar um link.';return;}
  const button=$('createShare'),strong=button.querySelector('strong');button.disabled=true;button.classList.add('is-uploading');$('shareLinkRow').hidden=true;resetShareProgress();setShareProgress(0,'Preparando o envio…');$('shareStatus').textContent='';
  try{
-  const health=await shareFetch('/api/share?health=1',{cache:'no-store'},2),healthBody=await health.json().catch(()=>({}));if(!health.ok||!healthBody.ok)throw Error(healthBody.detail||healthBody.error||'O armazenamento do compartilhamento não está disponível.');
+  const health=await shareFetch('/api/view?health=1',{cache:'no-store'},2),healthBody=await health.json().catch(()=>({}));if(!health.ok||!healthBody.ok)throw Error(healthBody.detail||healthBody.error||'O armazenamento do compartilhamento não está disponível.');
   const shareId=crypto.randomUUID().replaceAll('-',''),chunkSize=4*1024*1024,total=Math.ceil(currentFile.size/chunkSize);
   if(!total||currentFile.size>1024*1024*1024)throw Error('Este modelo excede o limite de 1 GB para links compartilháveis.');
   for(let part=0;part<total;part++){
    const pct=Math.floor((part/total)*92);setShareProgress(pct,`Enviando IFC · parte ${part+1} de ${total}`);if(strong)strong.textContent=`🔗 Criando link… ${pct}%`;
-   const response=await shareFetch(`/api/share?id=${shareId}`,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/octet-stream','X-Share-Action':'upload','X-Share-Part':String(part),'X-Share-Total':String(total)},body:currentFile.slice(part*chunkSize,Math.min(currentFile.size,(part+1)*chunkSize))});
+   const response=await shareFetch(`/api/view?id=${shareId}`,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/octet-stream','X-Share-Action':'upload','X-Share-Part':String(part),'X-Share-Total':String(total)},body:currentFile.slice(part*chunkSize,Math.min(currentFile.size,(part+1)*chunkSize))});
    const error=await apiError(response,'Falha ao enviar uma parte do IFC.');if(error)throw error;
   }
   setShareProgress(95,'Finalizando o link…');if(strong)strong.textContent='🔗 Finalizando link…';
-  const response=await shareFetch(`/api/share?id=${shareId}`,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'finalize',total,size:currentFile.size,name:currentFile.name,state:viewState(),permission:'view'})});
+  const response=await shareFetch(`/api/view?id=${shareId}`,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'finalize',total,size:currentFile.size,name:currentFile.name,state:viewState(),permission:document.querySelector('input[name="sharePermission"]:checked')?.value==='edit'?'edit':'view'})});
   const error=await apiError(response,'Falha ao finalizar o compartilhamento.');if(error)throw error;
-  const result=await response.json(),shareUrl=`${PUBLIC_VIEWER_ORIGIN}/projeto/${shareId}`;
+  const result=await response.json(),shareUrl=result.shareUrl||new URL(`?share=${shareId}`,location.origin).href;
   $('shareLink').value=shareUrl;$('shareLinkRow').hidden=false;setShareProgress(100,'Link criado com sucesso.');$('shareStatus').textContent='Link criado. Use Copiar para enviar.';
   try{await navigator.clipboard.writeText(shareUrl);$('shareStatus').textContent='Link criado e copiado para a área de transferência.'}catch{}
  }catch(error){setShareProgress(0,'Falha ao criar o link.');$('shareStatus').textContent=error.message||'Não foi possível criar o link.'}
@@ -284,17 +283,17 @@ async function openSharedModel(shareId){
  if(!/^[a-f0-9]{32}$/.test(shareId))return;
  $('welcome').hidden=false;status('Carregando modelo compartilhado…');
  try{
-  const metaResponse=await fetch(`/api/share?id=${shareId}`),metaError=await apiError(metaResponse,'Modelo compartilhado não encontrado.');if(metaError)throw metaError;
+  const metaResponse=await fetch(`/api/view?id=${shareId}`),metaError=await apiError(metaResponse,'Modelo compartilhado não encontrado.');if(metaError)throw metaError;
   const meta=await metaResponse.json();if(!Number.isInteger(meta.total)||meta.total<1||meta.total>256)throw Error('O link contém dados incompletos.');
-  sharePermission=meta.permission==='edit'?'edit':'view';readOnlyMode=sharePermission!=='edit';applyAccessUI();
+  sharePermission='view';readOnlyMode=true;applyAccessUI();
   const parts=[];
   for(let part=0;part<meta.total;part++){
    status(`Baixando modelo compartilhado… ${part+1} de ${meta.total}`);
-   const response=await fetch(`/api/share?id=${shareId}&part=${part}`),error=await apiError(response,'Falha ao baixar uma parte do modelo.');if(error)throw error;
+   const response=await fetch(`/api/view?id=${shareId}&part=${part}`),error=await apiError(response,'Falha ao baixar uma parte do modelo.');if(error)throw error;
    parts.push(await response.arrayBuffer());
   }
   const fileName=meta.name||`modelo-${shareId}.ifc`,file=new File(parts,fileName,{type:'application/x-step'});
-  trustedReadOnlyLoad=readOnlyMode;try{if(!await load(file))return;}finally{trustedReadOnlyLoad=false}restoreDocuments(meta.state?.pdfs);restoreState(meta.state);$('filename').textContent=readOnlyMode?`${fileName} · somente visualização`:`${fileName} · compartilhado · edição permitida`;if($('brandIntroHint'))$('brandIntroHint').hidden=true;hideBrandIntro();status('');
+  trustedReadOnlyLoad=readOnlyMode;try{if(!await load(file))return;}finally{trustedReadOnlyLoad=false}restoreDocuments(meta.state?.pdfs);restoreState(meta.state);$('filename').textContent=`${fileName} · somente visualização`;if($('brandIntroHint'))$('brandIntroHint').hidden=true;hideBrandIntro();status('');
  }catch(error){status(error.message||'Não foi possível abrir o modelo compartilhado.');$('welcome').hidden=false}
 }
 $('createShare').onclick=createShareLink;$('copyShareLink').onclick=async()=>{const value=$('shareLink').value;if(!value)return;try{await navigator.clipboard.writeText(value);$('shareStatus').textContent='Link copiado.'}catch{$('shareLink').focus();$('shareLink').select();$('shareStatus').textContent='Selecione e copie o link.'}};
@@ -360,7 +359,7 @@ async function persistDocuments(){
  const pdfs=documentMetadata(),generation=++pdfPersistGeneration;
  try{localStorage.setItem('ifc-documents:'+pdfScope,JSON.stringify(pdfs));}catch{}
  try{
-  const response=await fetch((location.protocol==='file:'?'https://eng-gustavogil.netlify.app':'')+'/api/share?catalog='+pdfScope,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({pdfs})});
+  const response=await fetch((location.protocol==='file:'?'https://eng-gustavogil.netlify.app':'')+'/api/view?catalog='+pdfScope,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({pdfs})});
   const error=await apiError(response,'Não foi possível salvar a lista de PDFs.');if(error)throw error;
   if(generation===pdfPersistGeneration){const body=await response.json().catch(()=>({}));$('pdfLibraryState').textContent=(body.count??pdfs.length)+' PDF(s) salvos online';}
   return true;
@@ -375,7 +374,7 @@ async function prepareDocuments(file){
   try{const saved=JSON.parse(localStorage.getItem('ifc-documents:'+pdfScope)||'[]');projectDocuments=cleanDocuments(saved);}catch{}
   $('pdfLibraryState').textContent='Carregando lista de PDFs…';
   try{
-   const response=await fetch((location.protocol==='file:'?'https://eng-gustavogil.netlify.app':'')+'/api/share?catalog='+pdfScope,{cache:'no-store',credentials:'same-origin'});
+   const response=await fetch((location.protocol==='file:'?'https://eng-gustavogil.netlify.app':'')+'/api/view?catalog='+pdfScope,{cache:'no-store',credentials:'same-origin'});
    const error=await apiError(response,'Não foi possível carregar a lista de PDFs.');if(error)throw error;
    const body=await response.json();
    const online=cleanDocuments(body.pdfs);
@@ -416,9 +415,9 @@ async function uploadProjectDocument(file){
  const id=crypto.randomUUID().replaceAll('-',''),chunk=4*1024*1024,total=Math.ceil(file.size/chunk);
  for(let part=0;part<total;part++){
   $('pdfStatus').textContent='Enviando '+file.name+' · '+(part+1)+'/'+total;
-  const r=await fetch((location.protocol==='file:'?'https://eng-gustavogil.netlify.app':'')+'/api/share?id='+id,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/octet-stream','X-Share-Action':'upload','X-Share-Part':String(part),'X-Share-Total':String(total)},body:file.slice(part*chunk,(part+1)*chunk)}),error=await apiError(r,'Falha ao enviar PDF.');if(error)throw error;
+  const r=await fetch((location.protocol==='file:'?'https://eng-gustavogil.netlify.app':'')+'/api/view?id='+id,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/octet-stream','X-Share-Action':'upload','X-Share-Part':String(part),'X-Share-Total':String(total)},body:file.slice(part*chunk,(part+1)*chunk)}),error=await apiError(r,'Falha ao enviar PDF.');if(error)throw error;
  }
- const r=await fetch((location.protocol==='file:'?'https://eng-gustavogil.netlify.app':'')+'/api/share?id='+id,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'finalize',total,size:file.size,name:file.name,state:{kind:'project-pdf'}})}),error=await apiError(r,'Falha ao finalizar PDF.');if(error)throw error;
+ const r=await fetch((location.protocol==='file:'?'https://eng-gustavogil.netlify.app':'')+'/api/view?id='+id,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'finalize',total,size:file.size,name:file.name,state:{kind:'project-pdf'}})}),error=await apiError(r,'Falha ao finalizar PDF.');if(error)throw error;
  return {id,name:file.name,size:file.size,floor:'',elements:[]};
 }
 function projectTab(pdf){$('projectWorkspace').classList.toggle('pdf-active',pdf);$('pdfDialog').hidden=!pdf;$('modelTab').classList.toggle('active',!pdf);$('pdfTab').classList.toggle('active',pdf);$('modelTab').setAttribute('aria-pressed',String(!pdf));$('pdfTab').setAttribute('aria-pressed',String(pdf));if(pdf){refreshPDFList();if(pdfDocument)requestAnimationFrame(renderPDFPage);}}
@@ -436,8 +435,8 @@ async function renderPDFPage(){
  }catch(e){if(e.name!=='RenderingCancelledException')$('pdfStatus').textContent='Não foi possível renderizar a página. Use Baixar PDF.';}
 }
 async function fetchProjectPDFBlob(doc,opening=null){
- const response=await fetch((location.protocol==='file:'?'https://eng-gustavogil.netlify.app':'')+'/api/share?id='+doc.id),error=await apiError(response,'PDF não encontrado.');if(error)throw error;const meta=await response.json();if(!Number.isInteger(meta.total)||meta.total<1||meta.total>25||meta.size>100*1024*1024)throw Error('PDF acima do limite do leitor.');
- const parts=[];for(let i=0;i<meta.total;i++){const r=await fetch((location.protocol==='file:'?'https://eng-gustavogil.netlify.app':'')+'/api/share?id='+doc.id+'&part='+i),err=await apiError(r);if(err)throw err;parts.push(await r.arrayBuffer());if(opening!==null&&opening!==pdfOpening)return null;$('pdfStatus').textContent='Baixando '+doc.name+' · '+(i+1)+'/'+meta.total;}
+ const response=await fetch((location.protocol==='file:'?'https://eng-gustavogil.netlify.app':'')+'/api/view?id='+doc.id),error=await apiError(response,'PDF não encontrado.');if(error)throw error;const meta=await response.json();if(!Number.isInteger(meta.total)||meta.total<1||meta.total>25||meta.size>100*1024*1024)throw Error('PDF acima do limite do leitor.');
+ const parts=[];for(let i=0;i<meta.total;i++){const r=await fetch((location.protocol==='file:'?'https://eng-gustavogil.netlify.app':'')+'/api/view?id='+doc.id+'&part='+i),err=await apiError(r);if(err)throw err;parts.push(await r.arrayBuffer());if(opening!==null&&opening!==pdfOpening)return null;$('pdfStatus').textContent='Baixando '+doc.name+' · '+(i+1)+'/'+meta.total;}
  const blob=new Blob(parts,{type:'application/pdf'});if(blob.size!==meta.size)throw Error('Download incompleto. Tente novamente.');return blob;
 }
 async function openProjectPDFExternal(doc){
