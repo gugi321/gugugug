@@ -50,3 +50,127 @@
 /* Keep the viewer usable before owner authentication. */
 .locked main,.locked footer{filter:none;pointer-events:auto}.locked header{pointer-events:auto}
 .locked #share,.locked .open,.locked #uploadPDFs,.locked #pdfFiles,.locked [data-owner-control]{display:none!important}
+
+
+/* ===== Mobile-first visualization refinement · 24/09/2026 ===== */
+.inspector-head-actions{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+.mobile-inspector-toggle{display:none}
+
+@media(max-width:760px){
+  html,body{width:100%;height:100%;min-height:100%;overflow:hidden}
+  body{min-height:100dvh;display:flex;flex-direction:column;background:#eef3f5}
+  header{height:58px!important;min-height:58px!important;display:flex!important;align-items:center!important;flex:none!important;gap:6px!important;padding:max(6px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) 6px max(8px,env(safe-area-inset-left))!important}
+  header .brand{grid-column:auto!important;min-width:0!important;flex:1 1 auto!important;gap:7px!important;overflow:hidden}
+  header .mark{display:none!important}
+  header .brand>div{min-width:0}
+  header .brand strong{display:block;font-size:13px!important;line-height:1.12;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  header .brand small{font-size:8px!important;letter-spacing:1.1px!important;margin-top:2px!important;white-space:nowrap}
+  header #filename{display:none!important}
+  header #share,header .open{flex:0 0 auto;min-height:40px!important;height:40px!important;padding:7px 9px!important;font-size:11px!important;white-space:nowrap}
+  #projectPDFs{display:none!important}
+  footer{display:none!important}
+
+  main{display:block!important;position:relative;flex:1 1 auto!important;height:auto!important;min-height:0!important;overflow:hidden!important}
+  #projectWorkspace{height:100%!important;min-height:0!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
+  .project-tabs{height:44px;min-height:44px;flex:0 0 44px;padding:4px 7px!important;gap:5px!important;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .project-tabs::-webkit-scrollbar{display:none}
+  .project-tabs button{min-height:36px!important;height:36px;padding:6px 12px!important;font-size:12px!important;flex:0 0 auto;white-space:nowrap}
+
+  main>aside{position:absolute!important;z-index:50!important;inset:0 auto 0 0!important;width:min(88vw,330px)!important;max-height:none!important;padding:16px 14px 28px!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch;background:#fff;box-shadow:8px 0 30px #18323c30}
+  body.sidebar-hidden main>aside{display:block!important;transform:translateX(-105%)!important;pointer-events:none!important;box-shadow:none!important}
+  body:not(.sidebar-hidden) #projectWorkspace:after{content:"";position:absolute;inset:0;z-index:44;background:#10252d4d;pointer-events:none}
+  #layers{max-height:38dvh!important}
+
+  #projectWorkspace #viewport{flex:1 1 auto!important;height:auto!important;min-height:220px!important;overflow:hidden}
+  #viewport{min-height:220px!important}
+  .view-label{top:7px!important;left:7px!important;z-index:46!important}
+  .view-label #sidebarToggle{width:44px!important;height:44px!important;min-height:44px!important;padding:0!important;font-size:20px!important;background:#fff;box-shadow:0 2px 10px #243b4422}
+  #viewName{display:none!important}
+  .view-controls{top:7px!important;left:57px!important;right:7px!important;max-width:none!important;display:flex!important;flex-wrap:nowrap!important;justify-content:flex-start!important;overflow-x:auto!important;gap:4px!important;padding:0 0 4px!important;scrollbar-width:none;-webkit-overflow-scrolling:touch;z-index:45!important}
+  .view-controls::-webkit-scrollbar{display:none}
+  .view-controls button{flex:0 0 auto!important;min-height:40px!important;height:40px!important;padding:7px 9px!important;font-size:10px!important;background:#fff}
+
+  .toolbar{left:7px!important;right:7px!important;bottom:7px!important;transform:none!important;width:auto!important;max-width:none!important;display:flex!important;flex-wrap:nowrap!important;justify-content:flex-start!important;overflow-x:auto!important;gap:2px!important;padding:3px!important;scrollbar-width:none;-webkit-overflow-scrolling:touch;z-index:45!important}
+  .toolbar::-webkit-scrollbar{display:none}
+  .toolbar .tool-group{flex:0 0 auto!important;padding-right:2px!important;margin-right:2px!important}
+  .toolbar button{flex:0 0 auto!important;min-height:40px!important;height:40px!important;padding:7px 9px!important;font-size:10px!important}
+  .navigation{display:none!important}
+
+  #informationDock{flex:0 0 auto!important;display:block!important;max-height:none!important;overflow:visible!important;background:#fff;border-top:1px solid #ccd8dd;z-index:40}
+  #informationDock:not(:has(> :not([hidden]))){display:none!important}
+  #informationDock #selection.inspector{position:relative!important;inset:auto!important;width:100%!important;height:auto!important;min-height:0!important;max-height:none!important;border:0!important;border-radius:0!important;box-shadow:0 -7px 22px #17323c14!important;overflow:hidden!important;background:#fff}
+  #selection:not(.mobile-expanded){max-height:116px!important}
+  body.dimensions-active #selection:not(.mobile-expanded){max-height:252px!important}
+  #selection.mobile-expanded{max-height:min(44dvh,370px)!important;overflow:auto!important;-webkit-overflow-scrolling:touch}
+
+  #informationDock #selection .inspector-head{min-height:53px;padding:8px 10px!important;align-items:center!important;background:#f8fafb}
+  #informationDock #selection .inspector-head>div:first-child{min-width:0;flex:1}
+  #informationDock #selection .inspector-head .eyebrow{display:none!important}
+  #informationDock #selection .inspector-head h2{font-size:15px!important;line-height:1.15!important;margin:0 0 3px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #informationDock #selection .inspector-head p{font-size:10px!important;line-height:1.2!important;margin:0!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .inspector-head-actions{gap:4px}
+  .mobile-inspector-toggle{display:inline-flex!important;align-items:center;justify-content:center;min-height:38px!important;height:38px!important;padding:6px 9px!important;font-size:11px!important;border:1px solid #d6e1e5!important;background:#fff!important}
+  #closeProperties{width:38px;height:38px;min-height:38px!important;padding:0!important;font-size:22px!important}
+
+  #informationDock #selection .element-actions{display:flex!important;flex-wrap:nowrap!important;gap:5px!important;padding:6px 8px!important;overflow-x:auto!important;scrollbar-width:none;-webkit-overflow-scrolling:touch;border-bottom:0!important}
+  #informationDock #selection .element-actions::-webkit-scrollbar{display:none}
+  #informationDock #selection .element-actions button{flex:0 0 auto!important;min-height:43px!important;height:43px!important;min-width:104px!important;padding:7px 9px!important;font-size:11px!important}
+  #selection:not(.mobile-expanded) #hideElement,#selection:not(.mobile-expanded) #popout{display:none!important}
+  #selection:not(.mobile-expanded) #propertyBody{display:none!important}
+  #selection.mobile-expanded #propertyBody{display:block!important;max-height:25dvh!important;overflow:auto!important;padding:9px 11px!important;-webkit-overflow-scrolling:touch}
+  #selection.mobile-expanded .element-row{padding:9px 0!important}
+  #selection.mobile-expanded .element-row dt{font-size:11px!important}
+  #selection.mobile-expanded .element-row dd{font-size:13px!important}
+
+  #selection #elementSection{margin:0!important;padding:9px 11px!important;grid-template-columns:1fr!important;gap:6px!important}
+  #selection #elementSection label{margin-top:8px!important}
+  #selection #elementSection select{min-height:42px;font-size:14px}
+
+  #dimensionPanel{margin:0!important;padding:9px 10px 10px!important;background:#edf6f9!important;border-top:1px solid #d2e1e7!important;border-bottom:0!important}
+  .dimension-head{font-size:13px!important}
+  .dimension-head strong{font-size:13px!important}
+  .dimension-head button{min-height:36px!important;padding:5px 8px!important;font-size:10px!important}
+  #dimensionValues{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px!important;margin:7px 0!important}
+  #dimensionValues span{display:flex;align-items:center;justify-content:center;min-height:38px;padding:6px 5px!important;border:1px solid #d5e4e9;border-radius:7px!important;font-size:14px!important;font-weight:750!important;color:#0f536d!important;white-space:nowrap}
+  #dimensionPanel small{font-size:9px!important;line-height:1.25!important;margin-top:3px}
+  .dimension-views{display:flex!important;flex-wrap:nowrap!important;gap:4px!important;margin-top:7px!important;overflow-x:auto!important;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .dimension-views::-webkit-scrollbar{display:none}
+  .dimension-views button{flex:0 0 auto!important;min-height:38px!important;height:38px!important;min-width:68px!important;padding:5px 8px!important;font-size:10px!important}
+
+  #informationDock:has(#selection:not([hidden])) #status{display:none!important}
+
+  #welcome{top:50%!important;width:calc(100% - 20px)!important;max-width:390px!important;padding:13px 12px!important}
+  #welcome .file-icon{width:46px!important;height:54px!important;margin-bottom:12px!important}
+  #welcome h1{font-size:23px!important;line-height:1.08!important;margin:8px 0!important}
+  #welcome p{font-size:12px!important;line-height:1.4!important;margin:7px 0!important}
+  #welcome .privacy{font-size:10px!important;line-height:1.35!important;margin-top:9px!important}
+
+  #projectWorkspace.pdf-active #informationDock{display:none!important}
+  #pdfDialog{height:100%!important;min-height:0!important;padding:7px!important}
+  #pdfDialog .dialog-head h2{font-size:15px!important}
+  #pdfDialog .pdf-layout{grid-template-rows:minmax(160px,38%) minmax(0,62%)!important;gap:6px!important}
+  #pdfDialog .pdf-library{font-size:12px}
+  #pdfDialog .pdf-reader-tools button,#pdfDialog .pdf-reader-tools a{min-height:38px!important;height:38px!important}
+  dialog{max-height:calc(100dvh - 12px)!important}
+}
+
+@media(max-width:420px){
+  header{height:54px!important;min-height:54px!important}
+  header .brand strong{font-size:12px!important}
+  header .brand small{font-size:7.5px!important}
+  header #share,header .open{min-height:38px!important;height:38px!important;padding:6px 7px!important;font-size:10px!important}
+  .project-tabs{height:42px;min-height:42px;flex-basis:42px}
+  .project-tabs button{height:34px!important;min-height:34px!important;font-size:11px!important}
+  #selection:not(.mobile-expanded){max-height:112px!important}
+  body.dimensions-active #selection:not(.mobile-expanded){max-height:245px!important}
+  #dimensionValues span{font-size:13px!important}
+}
+
+@media(orientation:landscape) and (max-height:520px) and (max-width:950px){
+  header{height:50px!important;min-height:50px!important}
+  header .brand small{display:none!important}
+  #selection:not(.mobile-expanded){max-height:104px!important}
+  body.dimensions-active #selection:not(.mobile-expanded){max-height:214px!important}
+  #selection.mobile-expanded{max-height:48dvh!important}
+  #dimensionPanel small{display:none!important}
+}

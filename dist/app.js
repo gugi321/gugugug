@@ -8,6 +8,8 @@ const readOnlyMode=Boolean(sharedId||embedded||!adminPath);
 let ownerUser=null,ownerAuthorized=false,authReady=!adminPath, trustedReadOnlyLoad=false;
 const fetch=(input,options)=>{const url=new URL(input,location.origin);if(sharedId&&url.origin===location.origin&&url.pathname.startsWith('/api/share/')&&(!options?.method||options.method==='GET'))url.searchParams.set('project',sharedId);return window.fetch(url,options);};
 let T,Orbit,api,scene,camera,renderer,controls,model,box,grid,busy=false,axis='z',sign=1,selected=null;let W,apiReady=false,currentModelID=null,inspector=null,currentFile=null,propertyWindow=null,selectionRevision=0,isolatedID=null,transition=null;const hiddenIDs=new Set();let elementInfo=null;const propertyCache=new Map();const categories=new Map();let meshes=[];
+const mobileLayout=()=>Boolean(window.matchMedia?.('(max-width:760px)').matches);
+function setMobileInspectorExpanded(expanded){const panel=$('selection'),toggle=$('mobileInspectorToggle');if(!panel)return;panel.classList.toggle('mobile-expanded',Boolean(expanded));if(toggle){toggle.setAttribute('aria-expanded',String(Boolean(expanded)));toggle.textContent=expanded?'Menos':'Dados';}}
 const status=(message)=>{$('status').textContent=message;$('status').hidden=!message};
 const labels={IFCREINFORCINGBAR:'Armaduras · barras',IFCREINFORCINGMESH:'Armaduras · telas',IFCTENDON:'Tendões',IFCTENDONANCHOR:'Ancoragens',IFCBEAM:'Vigas',IFCCOLUMN:'Pilares',IFCSLAB:'Lajes',IFCWALL:'Paredes',IFCWALLSTANDARDCASE:'Paredes',IFCFOOTING:'Fundações',IFCPILE:'Estacas',IFCSTAIR:'Escadas',IFCDOOR:'Portas',IFCWINDOW:'Janelas',IFCROOF:'Coberturas',IFCBUILDINGELEMENTPROXY:'Outros elementos',IFCCOVERING:'Revestimentos',IFCMEMBER:'Membros estruturais',IFCPLATE:'Placas',IFCPIPESEGMENT:'Tubulações'};
 function hideBrandIntro(){}
@@ -27,13 +29,13 @@ async function select(mesh){
   const revision=++selectionRevision;
   if(selected)for(const m of meshes)if(m.userData.id===selected.userData.id)m.material.emissive.setHex(0);
   if(dimensionData&&dimensionData.hostID!==mesh?.userData.id)clearDimensions();
-  selected=mesh||null;elementInfo=null;$('selection').hidden=!mesh;
+  selected=mesh||null;elementInfo=null;$('selection').hidden=!mesh;if(mobileLayout())setMobileInspectorExpanded(false);
   if(!mesh){$('selectionStatus').textContent='Clique em um elemento para inspecionar';if(propertyWindow&&!propertyWindow.closed)propertyWindow.document.body.textContent='Nenhum elemento selecionado.';return;}
-  for(const m of meshes)if(m.userData.id===mesh.userData.id)m.material.emissive.setHex(0x635035);
+  for(const m of meshes)if(m.userData.id===mesh.userData.id)m.material.emissive.setHex(mobileLayout()?0x8a4c2d:0x635035);
   $('elementName').textContent=mesh.userData.name||'Elemento IFC';$('elementType').textContent=(labels[mesh.userData.type]||mesh.userData.type)+' · #'+mesh.userData.id;
   $('selectionStatus').textContent='Selecionado: #'+mesh.userData.id;$('propertyBody').textContent='Lendo propriedades do IFC…';
   await new Promise(r=>setTimeout(r,25));if(revision!==selectionRevision)return;
-  try{if(!propertyCache.has(mesh.userData.id))propertyCache.set(mesh.userData.id,inspector.read(mesh.userData.id));elementInfo=propertyCache.get(mesh.userData.id);$('elementName').textContent=elementInfo.name;$('elementType').textContent=(labels[elementInfo.type]||elementInfo.type)+' · #'+elementInfo.id;renderProperties();}catch(e){$('propertyBody').textContent='Não foi possível ler as propriedades deste elemento.';console.error(e)}
+  try{if(!propertyCache.has(mesh.userData.id))propertyCache.set(mesh.userData.id,inspector.read(mesh.userData.id));elementInfo=propertyCache.get(mesh.userData.id);$('elementName').textContent=elementInfo.name;$('elementType').textContent=(labels[elementInfo.type]||elementInfo.type)+' · #'+elementInfo.id;renderProperties();if(mobileLayout()&&revision===selectionRevision){requestAnimationFrame(()=>requestAnimationFrame(()=>{if(selected===mesh)focusSelected()}));}}catch(e){$('propertyBody').textContent='Não foi possível ler as propriedades deste elemento.';console.error(e)}
 }
 function dispose(group){if(!group)return;const geometries=new Set();group.traverse(m=>{if(m.geometry&&!geometries.has(m.geometry)){geometries.add(m.geometry);m.geometry.dispose();}if(m.material){if(Array.isArray(m.material))m.material.forEach(x=>x.dispose());else m.material.dispose()}});scene?.remove(group)}
 function fit(view='iso',targetBox=null,animate=true){
@@ -130,7 +132,7 @@ function frameSection(){
  camera.up.copy(f.v);camera.position.copy(center).addScaledVector(f.n,Math.max(f.hi[0]-f.lo[0],span)*2+1);controls.target.copy(center);camera.userData.span=span*1.5/Math.min(aspect,1);camera.zoom=1;camera.near=.0001;camera.far=Math.max(box.getSize(new T.Vector3()).length()*10,100);resizeCamera(aspect);camera.updateProjectionMatrix();controls.update();
 }
 function openElementSection(){
- if(!selected||!elementInfo)return;
+ if(!selected||!elementInfo)return;if(mobileLayout())setMobileInspectorExpanded(true);
  const info=elementInfo;
  clearDimensions();
  if(elementSection)closeElementSection();
@@ -165,12 +167,12 @@ function measureElement(hostID){
 function dimensionPoint(data,coords){return data.origin.clone().addScaledVector(data.basis[0],coords[0]).addScaledVector(data.basis[1],coords[1]).addScaledVector(data.basis[2],coords[2]);}
 const measureText=value=>new Intl.NumberFormat('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:2}).format(value*100)+' cm';
 function dimensionLabel(text,position,size){
- const canvas=document.createElement('canvas');canvas.width=640;canvas.height=100;const ctx=canvas.getContext('2d');ctx.fillStyle='rgba(255,255,255,.96)';ctx.fillRect(0,0,640,100);ctx.font='600 42px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#14536a';ctx.fillText(text,320,50);
- const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;const sprite=new T.Sprite(new T.SpriteMaterial({map:texture,depthTest:false,depthWrite:false}));sprite.position.copy(position);sprite.scale.set(size*6.4,size,1);sprite.renderOrder=30;dimensionGroup.add(sprite);
+ const canvas=document.createElement('canvas');canvas.width=768;canvas.height=128;const ctx=canvas.getContext('2d');ctx.fillStyle='rgba(255,255,255,.97)';ctx.fillRect(0,0,768,128);ctx.strokeStyle='rgba(30,91,112,.22)';ctx.lineWidth=3;ctx.strokeRect(2,2,764,124);ctx.font=(mobileLayout()?'700 58px Arial':'700 52px Arial');ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#0f536d';ctx.fillText(text,384,64);
+ const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;const sprite=new T.Sprite(new T.SpriteMaterial({map:texture,depthTest:false,depthWrite:false}));sprite.position.copy(position);sprite.scale.set(size*6,size,1);sprite.renderOrder=30;dimensionGroup.add(sprite);
 }
 function buildDimensions(hostID){
  clearDimensions();const data=measureElement(hostID);if(!data)return;dimensionData=data;dimensionGroup=new T.Group();scene.add(dimensionGroup);
- const max=Math.max(...data.values,.1),offset=max*.10,labelHeight=max*.027;
+ const max=Math.max(...data.values,.1),offset=max*.11,labelHeight=max*(mobileLayout()?.042:.034);
  for(let i=0;i<3;i++){
   const start=[...data.lo],end=[...data.lo],j=(i+1)%3;start[j]-=offset;end[j]-=offset;end[i]=data.hi[i];
   const a=dimensionPoint(data,start),b=dimensionPoint(data,end),refA=[...start],refB=[...end];refA[j]=refB[j]=data.lo[j];
@@ -183,7 +185,7 @@ function buildDimensions(hostID){
  $('dimensionPanel').hidden=false;document.body.classList.add('dimensions-active');
 }
 function isolateAndDimension(){
- if(!selected||!elementInfo)return;const info=elementInfo;
+ if(!selected||!elementInfo)return;const info=elementInfo;if(mobileLayout())setMobileInspectorExpanded(false);
  if(info.unresolvedSteel){status('Selecione o elemento de concreto para cotar suas dimensões.');return;}
  if(elementSection)closeElementSection();
  try{isolatedID=info.id;hiddenIDs.clear();categories.forEach(c=>c.visible=true);$('cut').checked=false;$('opacity').value=0;changeProjection(true);layerUI();update();buildDimensions(info.id);dimensionView('iso');status('Cotas medidas na geometria. As propriedades declaradas no IFC permanecem separadas.');}catch(e){clearDimensions();status(e.message)}
@@ -220,7 +222,7 @@ function changeProjection(orthographic){
 }
 function navigationMode(pan){if(!controls)return;controls.mouseButtons.LEFT=pan?T.MOUSE.PAN:T.MOUSE.ROTATE;controls.touches.ONE=pan?T.TOUCH.PAN:T.TOUCH.ROTATE;for(const id of ['pan','orbit']){const active=(id==='pan')===pan;$(id).classList.toggle('active',active);$(id).setAttribute('aria-pressed',String(active))}$('canvas').style.cursor=pan?'move':'grab'}
 function zoom(factor){if(!camera)return;transition=null;if(camera.isOrthographicCamera){camera.zoom=T.MathUtils.clamp(camera.zoom/factor,.05,1000);camera.updateProjectionMatrix()}else{camera.position.sub(controls.target).multiplyScalar(factor).add(controls.target)}controls.update()}
-$('closeProperties').onclick=()=>{if(elementSection)closeElementSection();select(null)};$('focusElement').onclick=focusSelected;$('isolateElement').onclick=isolateAndDimension;$('hideElement').onclick=()=>{if(selected){hiddenIDs.add(selected.userData.id);select(null);update()}};
+if($('mobileInspectorToggle'))$('mobileInspectorToggle').onclick=()=>setMobileInspectorExpanded(!$('selection').classList.contains('mobile-expanded'));$('closeProperties').onclick=()=>{if(elementSection)closeElementSection();setMobileInspectorExpanded(false);select(null)};$('focusElement').onclick=focusSelected;$('isolateElement').onclick=isolateAndDimension;$('hideElement').onclick=()=>{if(selected){hiddenIDs.add(selected.userData.id);select(null);update()}};
 $('popout').onclick=()=>{propertyWindow=window.open('','ifc-element-properties','popup,width=520,height=760');if(!propertyWindow){status('O navegador bloqueou a nova janela. Permita pop-ups ou use o painel de propriedades.');return}propertyWindow.document.body.textContent='Carregando propriedades…';if(elementInfo)syncPropertyWindow();propertyWindow.focus()};
 $('layerSearch').oninput=layerUI;$('sidebarToggle').onclick=()=>{document.body.classList.toggle('sidebar-hidden');$('sidebarToggle').setAttribute('aria-expanded',String(!document.body.classList.contains('sidebar-hidden')))};
 $('showGrid').onchange=update;$('edges').onchange=()=>{if($('edges').checked){for(const m of meshes){if(m.children.length)continue;const edge=new T.LineSegments(new T.EdgesGeometry(m.geometry,35),new T.LineBasicMaterial({color:0x354e60,transparent:true,opacity:.3,clippingPlanes:[]}));m.add(edge)}}update()};
