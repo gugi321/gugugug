@@ -1,0 +1,26 @@
+/* Leitor DWG/DXF: carregado somente quando o usuário abre a aba. */
+#dwgDialog{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;background:#f5f7f8;overflow:hidden}
+#dwgDialog[hidden]{display:none!important}
+#projectWorkspace.dwg-active #viewport,#projectWorkspace.dwg-active #informationDock,#projectWorkspace.dwg-active #pdfDialog{display:none!important}
+main:has(#projectWorkspace.dwg-active){grid-template-columns:1fr}
+main:has(#projectWorkspace.dwg-active)>aside{display:none!important}
+.dwg-head{display:flex;align-items:center;gap:12px;padding:12px 16px;background:#fff;border-bottom:1px solid #d9e2e6;flex:0 0 auto}
+.dwg-head-copy{min-width:0;flex:1}.dwg-head-copy h2{margin:0;font-size:18px;letter-spacing:-.3px}.dwg-head-copy p{margin:4px 0 0;font-size:12px;color:#74868e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dwg-head-actions{display:flex;align-items:center;gap:6px;overflow-x:auto;scrollbar-width:none}.dwg-head-actions::-webkit-scrollbar{display:none}.dwg-head-actions button{flex:0 0 auto;padding:8px 10px;font-size:12px}
+.dwg-workspace{position:relative;flex:1;min-height:0;display:flex;background:#eef2f3}
+#dwgCanvasWrap{position:relative;flex:1;min-width:0;min-height:0;overflow:hidden;background:#f8fafb;touch-action:none;user-select:none;cursor:grab}
+#dwgCanvasWrap:active{cursor:grabbing}
+#dwgStage{position:absolute;inset:0;transform-origin:0 0;will-change:transform;display:flex;align-items:center;justify-content:center;padding:18px}
+#dwgStage svg{display:block;width:100%;height:100%;max-width:none;max-height:none;overflow:visible}
+#dwgEmpty{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;padding:24px;text-align:center}.dwg-empty-card{max-width:460px;background:#ffffffde;border:1px solid #dce4e8;border-radius:16px;padding:24px;box-shadow:0 10px 35px #29424e12}.dwg-empty-card strong{display:block;font-size:22px;color:#203a45;margin-bottom:8px}.dwg-empty-card p{font-size:13px;line-height:1.6;color:#71848c;margin:0}
+#dwgDialog:has(#dwgStage svg) #dwgEmpty{display:none}
+.dwg-toolbar{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);display:flex;align-items:center;gap:4px;padding:5px;background:#ffffffed;border:1px solid #d6e1e5;border-radius:10px;box-shadow:0 5px 20px #2036401a;z-index:4}.dwg-toolbar button{border:0;padding:9px 10px;font-size:12px;background:transparent}.dwg-toolbar span{min-width:48px;text-align:center;font-size:11px;color:#627780}.dwg-toolbar button:hover{background:#eef3f5}
+.dwg-side{width:240px;flex:0 0 240px;padding:16px;background:#fff;border-left:1px solid #d9e2e6;overflow:auto}.dwg-side h3{margin:0 0 12px;font-size:13px;color:#38515d;text-transform:uppercase;letter-spacing:.8px}.dwg-file-name{font-size:13px;font-weight:700;color:#213b46;overflow-wrap:anywhere}.dwg-file-meta{font-size:11px;color:#7d8e95;line-height:1.5;margin-top:5px}.dwg-note{font-size:11px;line-height:1.55;color:#73858d;border-top:1px solid #e5ebee;margin-top:16px;padding-top:14px}.dwg-note a{color:#426c7b}
+#dwgStatus{margin:14px 0 0;font-size:12px;line-height:1.55;color:#607680;white-space:pre-wrap}#dwgStatus[data-kind="error"]{color:#a13f2d}#dwgStatus[data-kind="ok"]{color:#2e6f55}#dwgStatus[data-kind="busy"]{color:#a85b2e}
+.dwg-dark #dwgCanvasWrap{background:#152128}.dwg-dark #dwgStage svg{filter:brightness(1.08)}
+.readonly #dwgTab,.readonly #dwgDialog{display:none!important}
+@media(max-width:760px){
+ #dwgDialog{height:100%;min-height:0}.dwg-head{padding:8px;gap:7px}.dwg-head-copy h2{font-size:15px}.dwg-head-copy p{font-size:10px}.dwg-head-actions button{min-height:38px;padding:6px 9px;font-size:10px}.dwg-head-actions #openAnotherDWG{display:none}
+ .dwg-workspace{display:block}.dwg-side{position:absolute;left:8px;right:8px;top:8px;width:auto;z-index:3;padding:9px 11px;border:1px solid #d9e2e6;border-radius:9px;background:#ffffffeb;box-shadow:0 4px 16px #1f394414;max-height:90px}.dwg-side h3,.dwg-note{display:none}.dwg-file-name{font-size:11px}.dwg-file-meta,#dwgStatus{font-size:10px;margin-top:3px;line-height:1.35}
+ #dwgCanvasWrap{position:absolute;inset:0}.dwg-toolbar{bottom:10px;max-width:calc(100% - 16px);overflow-x:auto;justify-content:flex-start}.dwg-toolbar button{min-height:40px;padding:7px 9px}.dwg-empty-card{padding:18px 16px}.dwg-empty-card strong{font-size:18px}.dwg-empty-card p{font-size:12px}
+}
