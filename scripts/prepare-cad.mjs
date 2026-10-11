@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 
 const VERSION = '0.8.0';
@@ -30,4 +30,12 @@ for (const [source, target, minimumBytes] of assets) {
   await download(source, target, minimumBytes);
 }
 
-console.log(`Runtime CAD ${VERSION} preparado localmente.`);
+const indexPath = resolve('dist/index.html');
+let html = await readFile(indexPath, 'utf8');
+html = html.replace(/<meta name="theme-color" content="[^"]*">/i, '<meta name="theme-color" content="#f7f9f8">');
+if (!html.includes('src="quantities.js"')) {
+  html = html.replace('<script type="module" src="dwg.js"></script>', '<script type="module" src="dwg.js"></script><script type="module" src="quantities.js"></script>');
+}
+await writeFile(indexPath, html, 'utf8');
+
+console.log(`Runtime CAD ${VERSION} preparado localmente e index validado.`);
