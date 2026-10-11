@@ -45,6 +45,11 @@ for (const [file, minimum] of minimums) {
 const wasm = await readFile(resolve('dist/wasm/libredwg-web.wasm'));
 if (!(wasm[0] === 0x00 && wasm[1] === 0x61 && wasm[2] === 0x73 && wasm[3] === 0x6d)) throw new Error('libredwg-web.wasm inválido');
 
+const dwgPath = resolve('dist/dwg.js');
+let dwg = await readFile(dwgPath, 'utf8');
+dwg = dwg.replace('vendor/cad/cad-viewer.es.js', 'vendor/cad/cad-viewer.bundle.js');
+await writeFile(dwgPath, dwg, 'utf8');
+
 const indexPath = resolve('dist/index.html');
 let html = await readFile(indexPath, 'utf8');
 html = html.replace(/<meta name="theme-color" content="[^"]*">/i, '<meta name="theme-color" content="#f7f9f8">');
