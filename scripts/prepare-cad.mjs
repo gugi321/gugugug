@@ -1,34 +1,49 @@
-import { mkdir, writeFile, readFile } from 'node:fs/promises';
+import { build } from 'esbuild';
+import { copyFile, mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 
-const VERSION = '0.8.0';
-const ROOT = `https://cdn.jsdelivr.net/npm/@flyfish-dev/cad-viewer@${VERSION}/dist`;
-const assets = [
-  ['cad-viewer.es.js', 'dist/vendor/cad/cad-viewer.es.js', 100_000],
-  ['style.css', 'dist/vendor/cad/style.css', 1_000],
-  ['wasm/dwg-worker.js', 'dist/wasm/dwg-worker.js', 10_000],
-  ['wasm/libredwg-web.js', 'dist/wasm/libredwg-web.js', 50_000],
-  ['wasm/libredwg-web.wasm', 'dist/wasm/libredwg-web.wasm', 500_000],
+const ROOT = resolve('node_modules/@flyfish-dev/cad-viewer/dist');
+const outModule = resolve('dist/vendor/cad/cad-viewer.bundle.js');
+const copies = [
+  [resolve(ROOT, 'style.css'), resolve('dist/vendor/cad/style.css')],
+  [resolve(ROOT, 'wasm/dwg-worker.js'), resolve('dist/wasm/dwg-worker.js')],
+  [resolve(ROOT, 'wasm/libredwg-web.js'), resolve('dist/wasm/libredwg-web.js')],
+  [resolve(ROOT, 'wasm/libredwg-web.wasm'), resolve('dist/wasm/libredwg-web.wasm')]
 ];
 
-async function download(source, target, minimumBytes) {
-  const url = `${ROOT}/${source}`;
-  const response = await fetch(url, { redirect: 'follow' });
-  if (!response.ok) throw new Error(`Falha ao baixar ${source}: HTTP ${response.status}`);
-  const bytes = new Uint8Array(await response.arrayBuffer());
-  if (bytes.byteLength < minimumBytes) throw new Error(`${source} retornou apenas ${bytes.byteLength} bytes`);
-  if (source.endsWith('.wasm') && !(bytes[0] === 0x00 && bytes[1] === 0x61 && bytes[2] === 0x73 && bytes[3] === 0x6d)) {
-    throw new Error(`${source} não contém um WebAssembly válido`);
-  }
-  const out = resolve(target);
-  await mkdir(dirname(out), { recursive: true });
-  await writeFile(out, bytes);
-  console.log(`CAD asset OK: ${target} (${bytes.byteLength} bytes)`);
+await mkdir(dirname(outModule), { recursive: true });
+await mkdir(resolve('dist/wasm'), { recursive: true });
+
+await build({
+  entryPoints: [resolve(ROOT, 'cad-viewer.es.js')],
+  bundle: true,
+  format: 'esm',
+  platform: 'browser',
+  target: ['es2020'],
+  outfile: outModule,
+  minify: true,
+  sourcemap: false,
+  legalComments: 'none',
+  logLevel: 'info'
+});
+
+for (const [source, target] of copies) {
+  await mkdir(dirname(target), { recursive: true });
+  await copyFile(source, target);
 }
 
-for (const [source, target, minimumBytes] of assets) {
-  await download(source, target, minimumBytes);
+const minimums = new Map([
+  [outModule, 100_000],
+  [resolve('dist/wasm/dwg-worker.js'), 10_000],
+  [resolve('dist/wasm/libredwg-web.js'), 50_000],
+  [resolve('dist/wasm/libredwg-web.wasm'), 500_000]
+]);
+for (const [file, minimum] of minimums) {
+  const info = await stat(file);
+  if (info.size < minimum) throw new Error(`${file} incompleto: ${info.size} bytes`);
 }
+const wasm = await readFile(resolve('dist/wasm/libredwg-web.wasm'));
+if (!(wasm[0] === 0x00 && wasm[1] === 0x61 && wasm[2] === 0x73 && wasm[3] === 0x6d)) throw new Error('libredwg-web.wasm inválido');
 
 const indexPath = resolve('dist/index.html');
 let html = await readFile(indexPath, 'utf8');
@@ -37,5 +52,4 @@ if (!html.includes('src="quantities.js"')) {
   html = html.replace('<script type="module" src="dwg.js"></script>', '<script type="module" src="dwg.js"></script><script type="module" src="quantities.js"></script>');
 }
 await writeFile(indexPath, html, 'utf8');
-
-console.log(`Runtime CAD ${VERSION} preparado localmente e index validado.`);
+console.log('CAD runtime local validado: bundle + worker + WASM.');
