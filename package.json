@@ -3,6 +3,10 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@flyfish-dev/cad-viewer": "0.8.0",
     "@netlify/blobs": "^10.1.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.10"
   }
 }
