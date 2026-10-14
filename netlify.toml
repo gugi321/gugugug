@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build:cad"
+  command = "echo Static app ready"
   publish = "dist"
 
 [build.environment]
@@ -18,18 +18,6 @@
 [[headers]]
   for = "/cad/*"
   [headers.values]
-    Cache-Control = "no-cache, no-store, must-revalidate"
-
-[[headers]]
-  for = "/cad/assets/*.js"
-  [headers.values]
-    Content-Type = "text/javascript; charset=utf-8"
-    Cache-Control = "no-cache, no-store, must-revalidate"
-
-[[headers]]
-  for = "/cad/assets/*.wasm"
-  [headers.values]
-    Content-Type = "application/wasm"
     Cache-Control = "no-cache, no-store, must-revalidate"
 
 [[headers]]
