@@ -25,7 +25,7 @@ const busyText = $('busyText') as HTMLElement
 const diagnostics = $('diagnostics') as HTMLElement
 const errorDetails = $('errorDetails') as HTMLElement
 
-const CAD_BUILD = '2026-10-14-mini-cad-r7'
+const CAD_BUILD = '2026-10-14-mini-cad-r7.2'
 const CAD_DATA_BASE = 'https://cdn.jsdelivr.net/gh/mlightcad/cad-data@be0a4956038c05acdd664266e8c803ac04f0ac77/'
 const workerUrls = {
   mtextRender: new URL('./assets/mtext-renderer-worker.js', document.baseURI).href,
