@@ -79,6 +79,7 @@ function ensureCadTab() {
 ensureCadTab();
 ensureSidebarClose();
 setBuildLabel();
+void import('./quantities.js').catch(error => console.warn('Quantitativos:', error));
 
 const workspace = $('projectWorkspace');
 const tab = $('dwgTab');
