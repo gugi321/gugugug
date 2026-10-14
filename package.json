@@ -6,7 +6,8 @@
     "node": ">=20.19.0 <25"
   },
   "scripts": {
-    "build:cad": "vite build --config vite.cad.config.ts && node scripts/validate-cad-build.mjs",
+    "check:cad-deps": "node scripts/check-cad-deps.mjs",
+    "build:cad": "npm run check:cad-deps && vite build --config vite.cad.config.ts && node scripts/validate-cad-build.mjs",
     "validate:cad": "node scripts/validate-cad-build.mjs"
   },
   "dependencies": {
