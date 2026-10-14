@@ -2,11 +2,21 @@
   "name": "gustavogil-ifc-viewer",
   "private": true,
   "type": "module",
+  "scripts": {
+    "build:cad": "vite build --config vite.cad.config.ts"
+  },
   "dependencies": {
-    "@flyfish-dev/cad-viewer": "0.8.0",
+    "@mlightcad/cad-simple-ui-plugin": "1.7.4",
+    "@mlightcad/cad-simple-viewer": "1.7.4",
+    "@mlightcad/data-model": "1.15.1",
+    "@mlightcad/libredwg-converter": "^3.15.1",
+    "@mlightcad/mtext-parser": "^1.5.3",
+    "@mlightcad/mtext-renderer": "^0.13.2",
     "@netlify/blobs": "^10.1.0"
   },
   "devDependencies": {
-    "esbuild": "0.25.10"
+    "typescript": "^5.5.2",
+    "vite": "^6.4.3",
+    "vite-plugin-static-copy": "^4.1.1"
   }
 }
