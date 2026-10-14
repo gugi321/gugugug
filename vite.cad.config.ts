@@ -13,7 +13,17 @@ export default defineConfig({
     outDir: dist,
     emptyOutDir: true,
     modulePreload: false,
-    target: 'es2020'
+    target: 'es2020',
+    sourcemap: false,
+    minify: 'esbuild',
+    assetsInlineLimit: 0,
+    rollupOptions: {
+      output: {
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash][extname]'
+      }
+    }
   },
   plugins: [
     viteStaticCopy({
