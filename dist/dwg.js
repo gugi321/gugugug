@@ -1,4 +1,5 @@
 const $ = id => document.getElementById(id);
+const CAD_EMBED_VERSION = '20261014-r7';
 
 function ensureStylesheet(id, href) {
   if (document.getElementById(id)) return;
@@ -13,7 +14,7 @@ ensureStylesheet('gg-cad-embed-style', 'cad-embed.css');
 
 function setBuildLabel() {
   const label = document.querySelector('.build-version');
-  if (label) label.textContent = '14/10/2026 · mini CAD DWG · medir e visualizar';
+  if (label) label.textContent = '14/10/2026 · Mini CAD online R7';
 }
 
 function closeSidebar() {
@@ -49,6 +50,11 @@ function ensureSidebarClose() {
   }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
 }
 
+function cadUrl(extra = '') {
+  const suffix = extra ? `&${extra}` : '';
+  return `cad/index.html?v=${encodeURIComponent(CAD_EMBED_VERSION)}${suffix}`;
+}
+
 function ensureCadTab() {
   if ($('dwgTab')) return;
   const nav = document.querySelector('.project-tabs');
@@ -69,10 +75,13 @@ function ensureCadTab() {
   section.setAttribute('data-owner-control', '');
   section.innerHTML = `
     <div class="cad-embed-head">
-      <div><span class="eyebrow">MINI CAD</span><strong>DWG / DXF</strong><small>Visualização técnica · camadas · distância · área</small></div>
-      <button id="closeDWG" type="button">Voltar ao 3D</button>
+      <div><span class="eyebrow">MINI CAD ONLINE</span><strong>DWG / DXF</strong><small>Visualização técnica · camadas · distância · área</small></div>
+      <div class="cad-embed-actions"><span id="cadEmbedState">Aguardando…</span><button id="retryCAD" type="button">Recarregar CAD</button><button id="closeDWG" type="button">Voltar ao 3D</button></div>
     </div>
-    <iframe id="cadFrame" src="cad/index.html" title="Mini CAD DWG" loading="eager" allow="fullscreen"></iframe>`;
+    <div id="cadEmbedWrap">
+      <iframe id="cadFrame" src="${cadUrl()}" title="Mini CAD DWG online" loading="eager"></iframe>
+      <div id="cadEmbedOverlay" role="status"><strong>Carregando Mini CAD online…</strong><span>Verificando interface, worker DWG e WebAssembly.</span></div>
+    </div>`;
   workspace.appendChild(section);
 }
 
@@ -84,11 +93,53 @@ void import('./quantities.js').catch(error => console.warn('Quantitativos:', err
 const workspace = $('projectWorkspace');
 const tab = $('dwgTab');
 const panel = $('dwgDialog');
+const frame = $('cadFrame');
+const overlay = $('cadEmbedOverlay');
+const embedState = $('cadEmbedState');
+let cadReady = false;
+let bootTimer = 0;
+
+function setEmbedState(message, kind = '') {
+  if (embedState) {
+    embedState.textContent = message;
+    embedState.dataset.kind = kind;
+  }
+}
+
+function showOverlay(title, detail, kind = '') {
+  if (!overlay) return;
+  overlay.hidden = false;
+  overlay.dataset.kind = kind;
+  overlay.innerHTML = `<strong>${title}</strong><span>${detail}</span>`;
+}
+
+function hideOverlay() {
+  if (overlay) overlay.hidden = true;
+}
+
+function armBootWatchdog() {
+  clearTimeout(bootTimer);
+  cadReady = false;
+  setEmbedState('Carregando…', 'busy');
+  showOverlay('Carregando Mini CAD online…', 'Verificando interface, worker DWG e WebAssembly.');
+  bootTimer = window.setTimeout(() => {
+    if (cadReady) return;
+    setEmbedState('Falha ao iniciar', 'error');
+    showOverlay('O Mini CAD não respondeu.', 'Use “Recarregar CAD”. Se persistir, o diagnóstico dentro da aba indicará o arquivo que falhou.', 'error');
+  }, 15000);
+}
+
+function reloadCad() {
+  if (!frame) return;
+  armBootWatchdog();
+  frame.src = cadUrl(`reload=${Date.now()}`);
+}
 
 function activateCad() {
   if (document.body.classList.contains('readonly')) return;
   workspace?.classList.remove('pdf-active');
   workspace?.classList.add('dwg-active');
+  document.body.classList.add('cad-online-active');
   if (panel) panel.hidden = false;
   tab?.classList.add('active');
   tab?.setAttribute('aria-pressed', 'true');
@@ -97,10 +148,12 @@ function activateCad() {
     $(id)?.setAttribute('aria-pressed', 'false');
   }
   closeSidebar();
+  if (!cadReady) armBootWatchdog();
 }
 
 function deactivateCad() {
   workspace?.classList.remove('dwg-active');
+  document.body.classList.remove('cad-online-active');
   if (panel) panel.hidden = true;
   tab?.classList.remove('active');
   tab?.setAttribute('aria-pressed', 'false');
@@ -113,6 +166,44 @@ $('projectPDFs')?.addEventListener('click', deactivateCad);
 $('closeDWG')?.addEventListener('click', () => {
   deactivateCad();
   $('modelTab')?.click();
+});
+$('retryCAD')?.addEventListener('click', reloadCad);
+frame?.addEventListener('load', () => {
+  if (!cadReady) setEmbedState('Interface carregada; testando motor…', 'busy');
+});
+
+window.addEventListener('message', event => {
+  if (event.origin !== window.location.origin) return;
+  if (event.source !== frame?.contentWindow) return;
+  const data = event.data || {};
+  if (!String(data.type || '').startsWith('GG_CAD_')) return;
+
+  if (data.type === 'GG_CAD_BOOTED' || data.type === 'GG_CAD_READY') {
+    cadReady = true;
+    clearTimeout(bootTimer);
+    setEmbedState(data.workersReady === false ? 'CAD aberto · worker DWG pendente' : 'CAD online pronto', data.workersReady === false ? 'warn' : 'ok');
+    hideOverlay();
+    return;
+  }
+
+  if (data.type === 'GG_CAD_DIAGNOSTICS') {
+    if (data.ok === false) {
+      setEmbedState('Diagnóstico com falha', 'error');
+    }
+    return;
+  }
+
+  if (data.type === 'GG_CAD_DOCUMENT_OPENED') {
+    setEmbedState('DWG/DXF aberto', 'ok');
+    hideOverlay();
+    return;
+  }
+
+  if (data.type === 'GG_CAD_ERROR') {
+    clearTimeout(bootTimer);
+    setEmbedState(`Erro CAD · ${data.stage || 'runtime'}`, 'error');
+    showOverlay('O leitor CAD encontrou um erro.', data.message || 'Abra o diagnóstico dentro da aba e use “Testar novamente”.', 'error');
+  }
 });
 
 if (document.body.classList.contains('readonly') && tab) tab.hidden = true;
