@@ -1,0 +1,34 @@
+name: CAD build check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'cad-app/**'
+      - 'vite.cad.config.ts'
+      - 'package.json'
+      - 'dist/dwg.js'
+      - 'dist/cad-embed.css'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+          cache: 'npm'
+      - run: npm install --no-audit --no-fund
+      - run: npm run build:cad
+      - name: Validate CAD runtime
+        run: |
+          test -s dist/cad/index.html
+          test -s dist/cad/assets/libredwg-parser-worker.js
+          test -s dist/cad/assets/libredwg-web.wasm
+          test -s dist/cad/assets/mtext-renderer-worker.js
+          node -e "const fs=require('fs');const b=fs.readFileSync('dist/cad/assets/libredwg-web.wasm');if(!(b[0]===0&&b[1]===97&&b[2]===115&&b[3]===109))process.exit(1);console.log('WASM OK',b.length)"
