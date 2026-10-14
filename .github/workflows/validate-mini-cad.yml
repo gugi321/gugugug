@@ -1,0 +1,64 @@
+name: Validar Mini CAD Online
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'cad-app/**'
+      - 'vite.cad.config.ts'
+      - 'package.json'
+      - 'scripts/validate-cad-build.mjs'
+      - 'dist/dwg.js'
+      - 'dist/cad-embed.css'
+      - 'dist/version.json'
+  pull_request:
+    paths:
+      - 'cad-app/**'
+      - 'vite.cad.config.ts'
+      - 'package.json'
+      - 'scripts/validate-cad-build.mjs'
+      - 'dist/dwg.js'
+      - 'dist/cad-embed.css'
+      - 'dist/version.json'
+
+jobs:
+  build-and-validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+          cache: 'npm'
+          cache-dependency-path: package.json
+
+      - name: Instalar dependências fixadas
+        run: npm install --no-audit --no-fund
+
+      - name: Compilar e validar Mini CAD
+        run: npm run build:cad
+
+      - name: Validar JavaScript principal
+        run: |
+          node --check dist/dwg.js
+          if [ -f dist/quantities.js ]; then node --check dist/quantities.js; fi
+
+      - name: Conferir arquivos críticos
+        run: |
+          test -s dist/cad/index.html
+          test -s dist/cad/assets/libredwg-parser-worker.js
+          test -s dist/cad/assets/libredwg-web.wasm
+          test -s dist/cad/assets/mtext-renderer-worker.js
+
+      - name: Guardar build validado
+        uses: actions/upload-artifact@v4
+        with:
+          name: mini-cad-online-r7
+          path: dist/cad
+          if-no-files-found: error
+          retention-days: 7
