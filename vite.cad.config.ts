@@ -1,10 +1,9 @@
 import { resolve } from 'node:path'
-import { defineConfig, normalizePath } from 'vite'
+import { defineConfig } from 'vite'
 import { viteStaticCopy } from 'vite-plugin-static-copy'
 
 const root = resolve(__dirname, 'cad-app')
 const dist = resolve(__dirname, 'dist/cad')
-const pkg = (...parts: string[]) => normalizePath(resolve(__dirname, 'node_modules', ...parts))
 
 export default defineConfig({
   root,
@@ -29,16 +28,19 @@ export default defineConfig({
     viteStaticCopy({
       targets: [
         {
-          src: pkg('@mlightcad/cad-simple-viewer/dist/mtext-renderer-worker.js'),
-          dest: 'assets'
+          src: './node_modules/@mlightcad/cad-simple-viewer/dist/mtext-renderer-worker.js',
+          dest: 'assets',
+          rename: { stripBase: true }
         },
         {
-          src: pkg('@mlightcad/libredwg-converter/dist/libredwg-parser-worker.js'),
-          dest: 'assets'
+          src: './node_modules/@mlightcad/libredwg-converter/dist/libredwg-parser-worker.js',
+          dest: 'assets',
+          rename: { stripBase: true }
         },
         {
-          src: pkg('@mlightcad/libredwg-converter/dist/libredwg-web.wasm'),
-          dest: 'assets'
+          src: './node_modules/@mlightcad/libredwg-converter/dist/libredwg-web.wasm',
+          dest: 'assets',
+          rename: { stripBase: true }
         }
       ]
     })
