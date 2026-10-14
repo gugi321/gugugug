@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#f4f6f7" />
+  <title>Mini CAD · Eng. Gustavo Gil</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <main id="viewerPane" class="cad-shell">
+    <header class="cad-topbar">
+      <div class="cad-brand">
+        <strong>Mini CAD</strong>
+        <span>DWG / DXF · visualizar e medir</span>
+      </div>
+      <div class="cad-actions">
+        <button id="openFile" class="primary" type="button">Abrir DWG</button>
+        <button id="fitView" type="button" disabled>Enquadrar</button>
+        <button id="layers" type="button" disabled>Camadas</button>
+        <button id="measureDistance" type="button" disabled>Distância</button>
+        <button id="measureArea" type="button" disabled>Área</button>
+      </div>
+      <input id="fileInput" type="file" accept=".dwg,.dxf,application/acad,application/x-acad" hidden />
+    </header>
+
+    <section class="cad-canvas-area">
+      <div id="cad-container" aria-label="Visualizador CAD"></div>
+      <div id="emptyState" class="empty-state">
+        <div class="dwg-badge">DWG</div>
+        <strong>Abra um arquivo CAD</strong>
+        <p>Visualização local no navegador. O arquivo não é enviado para um servidor.</p>
+        <button id="openFileCenter" class="primary" type="button">Selecionar DWG / DXF</button>
+      </div>
+      <div id="busy" class="busy" hidden>
+        <div class="spinner"></div>
+        <span id="busyText">Carregando desenho…</span>
+      </div>
+    </section>
+
+    <footer class="cad-statusbar">
+      <span id="status">Pronto.</span>
+      <span id="workerStatus">Motor CAD: verificando…</span>
+      <span class="hint">Pan: arrastar · Zoom: roda/pinça · Medir: use os botões acima</span>
+    </footer>
+  </main>
+  <script type="module" src="./main.ts"></script>
+</body>
+</html>
