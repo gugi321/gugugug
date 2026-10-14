@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f3f5f6">
+  <title>Mini CAD Online · Eng. Gustavo Gil</title>
+  <link rel="stylesheet" href="./style.css?v=r8">
+</head>
+<body>
+  <main class="cad-shell">
+    <header class="topbar">
+      <div class="brand"><strong>Mini CAD Online</strong><span>DWG · visualizar e medir</span></div>
+      <div class="tools">
+        <button id="openBtn" class="primary">Abrir DWG</button>
+        <button id="fitBtn" disabled>Enquadrar</button>
+        <button id="panBtn" disabled class="active">Mover</button>
+        <button id="distBtn" disabled>Distância</button>
+        <button id="areaBtn" disabled>Área</button>
+        <button id="finishAreaBtn" disabled hidden>Finalizar área</button>
+        <button id="clearBtn" disabled>Limpar medidas</button>
+        <button id="zoomOutBtn" disabled>−</button>
+        <button id="zoomInBtn" disabled>＋</button>
+        <button id="bgBtn" disabled>Fundo</button>
+        <button id="fullBtn">Tela cheia</button>
+      </div>
+      <input id="fileInput" type="file" accept=".dwg,application/acad,application/x-acad" hidden>
+    </header>
+
+    <section class="workspace">
+      <aside class="side">
+        <section><span class="eyebrow">DESENHO</span><strong id="fileName">Nenhum DWG aberto</strong><small id="fileMeta">Processamento no navegador</small></section>
+        <section><span class="eyebrow">UNIDADE DA MEDIÇÃO</span><select id="unitSelect"><option value="unit">Unidade do desenho</option><option value="mm">mm</option><option value="cm">cm</option><option value="m">m</option></select><small>A medição usa as coordenadas reais do desenho.</small></section>
+        <section><span class="eyebrow">INFORMAÇÕES</span><div id="stats" class="stats">—</div></section>
+        <section><span class="eyebrow">CAMADAS</span><input id="layerSearch" type="search" placeholder="Buscar camada" disabled><div id="layers" class="layers"><small>Abra um DWG para listar as camadas.</small></div></section>
+        <section><span class="eyebrow">DIAGNÓSTICO</span><div id="engineState" class="state">Motor DWG: aguardando</div><button id="retryEngine">Testar motor</button><details><summary>Detalhes</summary><pre id="diag"></pre></details></section>
+      </aside>
+
+      <div id="viewport" class="viewport" tabindex="0">
+        <div id="empty" class="empty"><div class="badge">DWG</div><strong>Abra um desenho CAD</strong><p>Leitor leve para consulta, zoom, pan e medições.</p><button id="openCenter" class="primary">Selecionar DWG</button></div>
+        <div id="busy" class="busy" hidden><div class="spinner"></div><span id="busyText">Carregando…</span></div>
+        <div id="svgHost" class="svg-host"></div>
+        <div class="help">Roda/pinça: zoom · Mover: arrastar · Distância: 2 pontos · Área: 3+ pontos</div>
+      </div>
+    </section>
+
+    <footer><span id="status">Pronto.</span><span id="modeLabel">Modo: mover</span><span>R8 · leitor DWG estático</span></footer>
+  </main>
+  <script type="module" src="./app.js?v=r8"></script>
+</body>
+</html>
