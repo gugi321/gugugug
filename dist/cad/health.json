@@ -1,0 +1,1 @@
+{"build":"2026-10-14-static-cad-r8","engine":"@mlightcad/libredwg-web@0.7.11","mode":"static-browser","features":["dwg","svg","pan","zoom","distance","area","layers-list"]}
