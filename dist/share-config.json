@@ -1,0 +1,7 @@
+{
+  "version": "r9",
+  "backend": "",
+  "viewerPath": "view/",
+  "chunkSize": 8388608,
+  "maxModelBytes": 1073741824
+}
