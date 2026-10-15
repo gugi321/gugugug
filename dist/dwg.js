@@ -11,10 +11,11 @@ function ensureStylesheet(id, href) {
 }
 ensureStylesheet('gg-dwg-style', 'dwg.css');
 ensureStylesheet('gg-cad-embed-style', 'cad-embed.css');
+ensureStylesheet('gg-ui-r9-style', 'ui-r9.css');
 
 function setBuildLabel() {
   const label = document.querySelector('.build-version');
-  if (label) label.textContent = '14/10/2026 · Mini CAD online estático R8';
+  if (label) label.textContent = '15/10/2026 · compartilhamento R9 · cotas ampliadas';
 }
 
 function closeSidebar() {
@@ -89,6 +90,8 @@ ensureCadTab();
 ensureSidebarClose();
 setBuildLabel();
 void import('./quantities.js').catch(error => console.warn('Quantitativos:', error));
+void import('./share-r9.js').catch(error => console.warn('Compartilhamento R9:', error));
+void import('./dimensions-r9.js').catch(error => console.warn('Cotas ampliadas R9:', error));
 
 const workspace = $('projectWorkspace');
 const tab = $('dwgTab');
