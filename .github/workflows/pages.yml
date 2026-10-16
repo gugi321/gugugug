@@ -35,6 +35,34 @@ jobs:
       - name: Install app dependencies
         run: npm install --no-audit --no-fund
 
+      - name: Allow CAD status bridge to Hatchable host
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('cad-app/main.ts')
+          source = path.read_text(encoding='utf-8')
+          old = '''function postParent(type: string, detail: Record<string, unknown> = {}) {
+            if (window.parent === window) return
+            window.parent.postMessage({ type, build: CAD_BUILD, ...detail }, window.location.origin)
+          }'''
+          new = '''function postParent(type: string, detail: Record<string, unknown> = {}) {
+            if (window.parent === window) return
+            let targetOrigin = ''
+            try {
+              const parentOrigin = new URL(document.referrer || window.location.href).origin
+              if (parentOrigin === window.location.origin || parentOrigin === 'https://gg-visualizador-ifc.hatchable.site') {
+                targetOrigin = parentOrigin
+              }
+            } catch {}
+            if (!targetOrigin) return
+            window.parent.postMessage({ type, build: CAD_BUILD, ...detail }, targetOrigin)
+          }'''
+          if old not in source:
+            raise SystemExit('postParent source block not found')
+          path.write_text(source.replace(old, new, 1), encoding='utf-8')
+          PY
+
       - name: Build and validate Mini CAD
         run: npm run build:cad
 
