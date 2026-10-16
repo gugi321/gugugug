@@ -5,8 +5,7 @@ const ROOT = resolve('dist/cad')
 const required = [
   'index.html',
   'assets/libredwg-parser-worker.js',
-  'assets/libredwg-web.wasm',
-  'assets/mtext-renderer-worker.js'
+  'assets/libredwg-web.wasm'
 ]
 
 function fail(message) {
@@ -52,6 +51,12 @@ for (const name of jsAssets) {
   if (/\/src\/main\.ts/.test(text)) fail(`bundle ${name} contém referência de desenvolvimento`)
 }
 
+const appBundles = jsAssets
+  .filter(name => name !== 'libredwg-parser-worker.js')
+  .map(name => readFile(resolve(ROOT, 'assets', name), 'utf8'))
+const appText = (await Promise.all(appBundles)).join('\n')
+if (!appText.includes('useMainThreadDraw')) fail('bundle CAD não contém configuração de desenho no thread principal')
+
 const versionPath = resolve('dist/version.json')
 const version = JSON.parse(await readFile(versionPath, 'utf8'))
 if (!version.version || typeof version.version !== 'string') fail('dist/version.json não contém uma versão válida')
@@ -64,4 +69,4 @@ if (!parentDwg.includes('cad/index.html')) fail('integração principal não apo
 if (!parentDwg.includes('GG_CAD_READY')) fail('watchdog do CAD não está presente')
 if (!/CAD_EMBED_VERSION\s*=\s*['"][^'"]+['"]/.test(parentDwg)) fail('versão do iframe CAD não foi definida')
 
-console.log(`Mini CAD validado com sucesso para ${version.version}: HTML + bundles + workers + WASM + integração.`)
+console.log(`Mini CAD validado com sucesso para ${version.version}: HTML + bundles + LibreDWG worker + WASM + MTEXT no thread principal.`)
