@@ -1,5 +1,5 @@
 {
-  "version": "r9",
+  "version": "r10",
   "backend": "",
   "viewerPath": "view/",
   "chunkSize": 8388608,
