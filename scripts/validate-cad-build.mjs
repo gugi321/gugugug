@@ -47,7 +47,10 @@ const jsAssets = assetNames.filter(name => name.endsWith('.js'))
 if (jsAssets.length < 3) fail(`poucos bundles JS gerados: ${jsAssets.length}`)
 for (const name of jsAssets) {
   const text = await readFile(resolve(ROOT, 'assets', name), 'utf8')
-  if (/localhost|127\.0\.0\.1|file:\/\//i.test(text)) fail(`bundle ${name} contém endereço local`)
+  if (/localhost|127\.0\.0\.1/i.test(text)) fail(`bundle ${name} contém endereço local`)
+  // O worker LibreDWG inclui verificações internas de Emscripten com a string file://.
+  // Isso não é um caminho de desenvolvimento e não deve invalidar o build.
+  if (name !== 'libredwg-parser-worker.js' && /file:\/\//i.test(text)) fail(`bundle ${name} contém URL local file://`)
   if (/\/src\/main\.ts/.test(text)) fail(`bundle ${name} contém referência de desenvolvimento`)
 }
 
