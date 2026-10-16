@@ -42,6 +42,11 @@ await copyFirst([
   resolve(root, 'node_modules/web-ifc/web-ifc-mt.worker.js')
 ], resolve(out, 'vendor/web-ifc/web-ifc-mt.worker.js'));
 
+// web-ifc 0.0.68 resolves the pthread worker from the document root when loaded as ESM.
+// Keep root aliases in addition to the configured vendor path so Electron can initialize MT WASM.
+await cp(resolve(root, 'node_modules/web-ifc/web-ifc-mt.worker.js'), resolve(out, 'web-ifc-mt.worker.js'));
+await cp(resolve(root, 'node_modules/web-ifc/web-ifc-mt.wasm'), resolve(out, 'web-ifc-mt.wasm'));
+
 await mkdir(resolve(out, 'vendor/pdfjs'), { recursive: true });
 await cp(resolve(root, 'node_modules/pdfjs-dist/build/pdf.mjs'), resolve(out, 'vendor/pdfjs/pdf.mjs'));
 await cp(resolve(root, 'node_modules/pdfjs-dist/build/pdf.worker.mjs'), resolve(out, 'vendor/pdfjs/pdf.worker.mjs'));
