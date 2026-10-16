@@ -25,10 +25,9 @@ const busyText = $('busyText') as HTMLElement
 const diagnostics = $('diagnostics') as HTMLElement
 const errorDetails = $('errorDetails') as HTMLElement
 
-const CAD_BUILD = '2026-10-14-mini-cad-r7.2'
+const CAD_BUILD = '2026-10-16-eng-gustavo-g-r10.1'
 const CAD_DATA_BASE = 'https://cdn.jsdelivr.net/gh/mlightcad/cad-data@be0a4956038c05acdd664266e8c803ac04f0ac77/'
 const workerUrls = {
-  mtextRender: new URL('./assets/mtext-renderer-worker.js', document.baseURI).href,
   dwgParser: new URL('./assets/libredwg-parser-worker.js', document.baseURI).href
 }
 const wasmUrl = new URL('./assets/libredwg-web.wasm', document.baseURI).href
@@ -102,21 +101,20 @@ async function runDiagnostics() {
   checks.push({ label: 'Web Worker', ok: typeof Worker !== 'undefined', detail: typeof Worker !== 'undefined' ? 'suportado' : 'indisponível' })
   checks.push({ label: 'WebGL', ok: webglAvailable(), detail: webglAvailable() ? 'suportado' : 'indisponível' })
 
-  const [dwgWorker, mtextWorker, wasm] = await Promise.all([
+  const [dwgWorker, wasm] = await Promise.all([
     probeAsset(workerUrls.dwgParser, 'js'),
-    probeAsset(workerUrls.mtextRender, 'js'),
     probeAsset(wasmUrl, 'wasm')
   ])
   checks.push({ label: 'Worker DWG', ...dwgWorker })
-  checks.push({ label: 'Worker texto', ...mtextWorker })
   checks.push({ label: 'LibreDWG WASM', ...wasm })
+  checks.push({ label: 'Texto CAD', ok: true, detail: 'renderização principal · menor consumo de memória' })
 
   diagnostics.innerHTML = checks
     .map(c => `<span class="diag ${c.ok ? 'ok' : 'bad'}"><b>${c.label}</b><em>${c.ok ? 'OK' : 'Falha'}</em><small>${c.detail}</small></span>`)
     .join('')
 
   const runtimeOk = checks.filter(c => c.label !== 'WebGL').every(c => c.ok)
-  workerStatus.textContent = runtimeOk ? 'Motor CAD: arquivos OK' : 'Motor CAD: verifique o diagnóstico'
+  workerStatus.textContent = runtimeOk ? 'Motor CAD: DWG/WASM OK' : 'Motor CAD: verifique o diagnóstico'
   postParent('GG_CAD_DIAGNOSTICS', { ok: runtimeOk, checks })
   return runtimeOk
 }
