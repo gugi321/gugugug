@@ -1,0 +1,56 @@
+name: Security check
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+      - 'cloudflare/**'
+      - 'netlify/**'
+      - 'netlify.toml'
+      - 'dist/share-r9.js'
+      - 'dist/view/**'
+      - '.github/workflows/security-check.yml'
+  pull_request:
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+      - 'cloudflare/**'
+      - 'netlify/**'
+      - 'netlify.toml'
+      - 'dist/share-r9.js'
+      - 'dist/view/**'
+  schedule:
+    - cron: '17 9 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Audit critical vulnerabilities
+        run: npm audit --audit-level=critical
+      - name: Syntax checks
+        run: |
+          node --check dist/share-r9.js
+          node --check dist/eng-r10.js
+          node --check cloudflare/share-worker.js
+          if [ -f netlify/functions/share.mjs ]; then node --check netlify/functions/share.mjs; fi
+      - name: Reject accidental secrets in tracked configuration
+        shell: bash
+        run: |
+          if grep -RInE --exclude-dir=.git --exclude='SEGURANCA-ACESSO.md' '(SHARE_KEY|IFC_SESSION_SECRET)[[:space:]]*[:=][[:space:]]*["'"'][^$<{][^"'"']{8,}' .; then
+            echo 'Possível segredo fixo encontrado no repositório.'
+            exit 1
+          fi
