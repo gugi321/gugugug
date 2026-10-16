@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'tools/Eng-Gustavo-G-AUTO-NETLIFY.bat'
+      - 'tools/Eng-Gustavo-G-AUTO-NETLIFY-ONECLICK.bat'
       - '.github/workflows/test-auto-netlify-bat.yml'
   workflow_dispatch:
 
@@ -25,6 +26,6 @@ jobs:
         with:
           node-version: '24'
 
-      - name: Run the same BAT in test mode
+      - name: Run the exact one-click BAT in test mode
         shell: cmd
-        run: call tools\Eng-Gustavo-G-AUTO-NETLIFY.bat
+        run: call tools\Eng-Gustavo-G-AUTO-NETLIFY-ONECLICK.bat
