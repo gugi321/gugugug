@@ -25,7 +25,7 @@ const busyText = $('busyText') as HTMLElement
 const diagnostics = $('diagnostics') as HTMLElement
 const errorDetails = $('errorDetails') as HTMLElement
 
-const CAD_BUILD = '2026-10-16-eng-gustavo-g-r10.1'
+const CAD_BUILD = '2026-10-16-eng-gustavo-g-r10.2'
 const CAD_DATA_BASE = 'https://cdn.jsdelivr.net/gh/mlightcad/cad-data@be0a4956038c05acdd664266e8c803ac04f0ac77/'
 const workerUrls = {
   dwgParser: new URL('./assets/libredwg-parser-worker.js', document.baseURI).href
@@ -168,15 +168,10 @@ async function ensureViewer(): Promise<boolean> {
       })
 
       const manager = AcApDocManager.instance
-      try {
-        workersReady = await manager.areWorkersReady()
-      } catch {
-        workersReady = false
-      }
-
+      workersReady = await runDiagnostics()
       workerStatus.textContent = workersReady
         ? 'Motor CAD: pronto para DWG'
-        : 'Motor CAD: DXF disponível; DWG aguardando worker'
+        : 'Motor CAD: recursos incompletos; a abertura ainda será tentada'
 
       try {
         await acuiRegisterSimpleUiPlugin(manager.pluginManager, {
@@ -264,18 +259,9 @@ async function openDrawing(file?: File) {
   const manager = AcApDocManager.instance
 
   if (isDwg) {
-    try {
-      workersReady = await manager.areWorkersReady()
-    } catch {
-      workersReady = false
-    }
+    workersReady = await runDiagnostics()
     if (!workersReady) {
-      await runDiagnostics()
-      const message = 'O worker do DWG não respondeu. O DXF continua disponível, mas este DWG não pode ser aberto até o worker/WASM carregar corretamente.'
-      setStatus(message, true)
-      showErrorDetail(`Worker DWG: ${workerUrls.dwgParser}\nWASM: ${wasmUrl}`)
-      postParent('GG_CAD_ERROR', { stage: 'worker', message })
-      return
+      setStatus('O diagnóstico encontrou um recurso incompleto, mas o aplicativo tentará abrir o DWG mesmo assim.', false)
     }
   }
 
