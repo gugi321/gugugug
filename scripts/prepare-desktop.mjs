@@ -60,6 +60,7 @@ const appPath = resolve(out, 'app.js');
 let app = await readFile(appPath, 'utf8');
 app = app
   .replace("const PUBLIC_VIEWER_ORIGIN='https://visualizar-gustavo-gil-20260915-222909-8602.netlify.app';", "const PUBLIC_VIEWER_ORIGIN=location.origin;")
+  .replaceAll("(location.protocol==='file:'?'https://eng-gustavogil.netlify.app':'')", "''")
   .replace("import('https://cdn.jsdelivr.net/npm/web-ifc@0.0.68/web-ifc-api.js')", "import('/vendor/web-ifc/web-ifc-api.js')")
   .replace("api.SetWasmPath('https://cdn.jsdelivr.net/npm/web-ifc@0.0.68/')", "api.SetWasmPath('/vendor/web-ifc/')")
   .replace("import('https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.mjs')", "import('/vendor/pdfjs/pdf.mjs')")
