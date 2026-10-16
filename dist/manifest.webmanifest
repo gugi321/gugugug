@@ -1,0 +1,20 @@
+{
+  "name": "Eng Gustavo G",
+  "short_name": "Eng Gustavo G",
+  "description": "Visualizador técnico móvel de projetos IFC, DWG e PDF",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f3f5f6",
+  "theme_color": "#10252d",
+  "orientation": "any",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    {
+      "src": "./app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
