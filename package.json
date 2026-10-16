@@ -6,7 +6,7 @@
     "node": ">=20 <25"
   },
   "scripts": {
-    "build:cad": "node scripts/check-cad-deps.mjs && vite build --config vite.cad.config.ts && vite build --config vite.mtext-worker.config.ts && node scripts/validate-cad-build.mjs"
+    "build:cad": "node scripts/check-cad-deps.mjs && vite build --config vite.cad.config.ts && vite build --config vite.libredwg-worker.config.ts && vite build --config vite.mtext-worker.config.ts && node scripts/validate-cad-build.mjs"
   },
   "dependencies": {
     "@mlightcad/cad-simple-ui-plugin": "1.7.4",
