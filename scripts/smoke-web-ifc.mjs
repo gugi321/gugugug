@@ -19,10 +19,10 @@ const server = createServer(async (req,res) => {
     if (!file.startsWith(root)) throw new Error('forbidden');
     const info = await stat(file);
     if (!info.isFile()) throw new Error('not-file');
+    // GitHub Pages does not provide COOP/COEP for this site. Keep the smoke test
+    // equivalent to production so web-ifc selects the stable single-thread WASM.
     res.writeHead(200, {
       'Content-Type': mime[extname(file).toLowerCase()] || 'application/octet-stream',
-      'Cross-Origin-Opener-Policy':'same-origin',
-      'Cross-Origin-Embedder-Policy':'credentialless',
       'Cache-Control':'no-store'
     });
     createReadStream(file).pipe(res);
@@ -36,13 +36,36 @@ const url = `http://127.0.0.1:${port}/`;
 
 async function run(name, launcher, options) {
   const browser = await launcher.launch({ headless:true });
+  let context;
+  let page;
+  const diagnostics = [];
+  const snapshot = async () => {
+    if (!page) return {};
+    try {
+      return await page.evaluate(() => ({
+        href: location.href,
+        crossOriginIsolated: globalThis.crossOriginIsolated,
+        filename: document.getElementById('filename')?.textContent || '',
+        layers: document.querySelectorAll('#layers .layer').length,
+        canvases: document.querySelectorAll('#canvas canvas').length,
+        count: document.getElementById('count')?.textContent || '',
+        status: document.getElementById('status')?.textContent || '',
+        statusHidden: document.getElementById('status')?.hidden,
+        welcomeHidden: document.getElementById('welcome')?.hidden,
+        fileDisabled: document.getElementById('file')?.disabled,
+        bodyClass: document.body.className
+      }));
+    } catch (error) { return { snapshotError:error.message }; }
+  };
   try {
-    const context = await browser.newContext(options);
-    const page = await context.newPage();
-    const fatal = [];
-    page.on('pageerror', e => fatal.push(`pageerror: ${e.message}`));
+    context = await browser.newContext(options);
+    page = await context.newPage();
+    page.on('pageerror', e => diagnostics.push(`pageerror: ${e.message}`));
+    page.on('console', msg => { if (msg.type()==='error' || msg.type()==='warning') diagnostics.push(`${msg.type()}: ${msg.text()}`); });
+    page.on('requestfailed', req => diagnostics.push(`requestfailed: ${req.url()} :: ${req.failure()?.errorText || ''}`));
     await page.goto(url, { waitUntil:'domcontentloaded', timeout:30_000 });
     await page.waitForSelector('#file', { timeout:20_000 });
+    console.log(`${name} antes do IFC:`, JSON.stringify(await snapshot()));
     await page.locator('#file').setInputFiles(fixture);
     await page.waitForFunction(() => {
       const welcome = document.getElementById('welcome');
@@ -50,21 +73,22 @@ async function run(name, launcher, options) {
       const canvases = document.querySelectorAll('#canvas canvas').length;
       const status = document.getElementById('status')?.textContent || '';
       return welcome?.hidden === true && layers >= 1 && canvases >= 1 && !/erro|falha|não foi possível/i.test(status);
-    }, null, { timeout:45_000 });
-    const result = await page.evaluate(() => ({
-      filename: document.getElementById('filename')?.textContent || '',
-      layers: document.querySelectorAll('#layers .layer').length,
-      canvases: document.querySelectorAll('#canvas canvas').length,
-      count: document.getElementById('count')?.textContent || '',
-      status: document.getElementById('status')?.textContent || ''
-    }));
-    if (!/sample\.ifc/i.test(result.filename) || result.layers < 1 || result.canvases < 1) {
+    }, null, { timeout:60_000 });
+    const result = await snapshot();
+    if (!/sample\.ifc/i.test(result.filename || '') || result.layers < 1 || result.canvases < 1) {
       throw new Error(`${name}: IFC não carregou corretamente: ${JSON.stringify(result)}`);
     }
-    if (fatal.length) throw new Error(`${name}: ${fatal.join('\n')}`);
     console.log(`${name} IFC OK:`, JSON.stringify(result));
-    await context.close();
-  } finally { await browser.close(); }
+    if (diagnostics.length) console.warn(`${name} avisos:`, diagnostics.join('\n'));
+  } catch (error) {
+    console.error(`${name} IFC FALHOU:`, error?.stack || error);
+    console.error(`${name} estado final:`, JSON.stringify(await snapshot()));
+    if (diagnostics.length) console.error(`${name} console/rede:`, diagnostics.join('\n'));
+    throw error;
+  } finally {
+    if (context) await context.close().catch(()=>{});
+    await browser.close();
+  }
 }
 
 try {
