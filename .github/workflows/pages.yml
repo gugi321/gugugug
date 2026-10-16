@@ -8,6 +8,7 @@ on:
       - 'cad-app/**'
       - 'scripts/prepare-pages.mjs'
       - 'scripts/smoke-web-ifc.mjs'
+      - 'scripts/smoke-web-cad.mjs'
       - 'tests/fixtures/**'
       - 'vite.cad.config.ts'
       - 'vite.libredwg-worker.config.ts'
@@ -30,7 +31,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -59,7 +60,7 @@ jobs:
       - name: Prepare self-contained mobile site
         run: node scripts/prepare-pages.mjs
 
-      - name: Verify local IFC runtime assets
+      - name: Verify local IFC/CAD runtime assets
         shell: bash
         run: |
           test -s site/vendor/three/three.module.js
@@ -71,13 +72,29 @@ jobs:
           grep -q "./vendor/web-ifc/web-ifc-api.js" site/app.js
           grep -q "./vendor/three/three.module.js" site/index.html
 
-      - name: Install browser engines for real IFC smoke tests
+      - name: Install browser engines for functional smoke tests
         run: npx playwright install --with-deps chromium webkit
 
       - name: Open real IFC on Android Chromium and iPhone WebKit
         env:
           SMOKE_ROOT: site
         run: npm run test:web-ifc
+
+      - name: Download pinned LibreDWG sample for functional CAD test
+        shell: bash
+        run: |
+          mkdir -p tests
+          curl --fail --location --retry 3 \
+            'https://raw.githubusercontent.com/LibreDWG/libredwg/f860b0fb76d5f8effb5a70769a3389cb1e0308c8/test/test-data/sample_2000.dwg' \
+            --output tests/runtime-sample.dwg
+          test -s tests/runtime-sample.dwg
+          test $(stat -c%s tests/runtime-sample.dwg) -gt 1000
+
+      - name: Open real DWG with LibreDWG/WASM
+        env:
+          SMOKE_ROOT: site
+          DWG_FIXTURE: tests/runtime-sample.dwg
+        run: node scripts/smoke-web-cad.mjs
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
