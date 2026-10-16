@@ -11,6 +11,7 @@ on:
       - 'netlify.toml'
       - 'dist/share-r9.js'
       - 'dist/view/**'
+      - 'scripts/check-secrets.mjs'
       - '.github/workflows/security-check.yml'
   pull_request:
     paths:
@@ -21,6 +22,8 @@ on:
       - 'netlify.toml'
       - 'dist/share-r9.js'
       - 'dist/view/**'
+      - 'scripts/check-secrets.mjs'
+      - '.github/workflows/security-check.yml'
   schedule:
     - cron: '17 9 * * 1'
   workflow_dispatch:
@@ -46,11 +49,7 @@ jobs:
           node --check dist/share-r9.js
           node --check dist/eng-r10.js
           node --check cloudflare/share-worker.js
+          node --check scripts/check-secrets.mjs
           if [ -f netlify/functions/share.mjs ]; then node --check netlify/functions/share.mjs; fi
       - name: Reject accidental secrets in tracked configuration
-        shell: bash
-        run: |
-          if grep -RInE --exclude-dir=.git --exclude='SEGURANCA-ACESSO.md' '(SHARE_KEY|IFC_SESSION_SECRET)[[:space:]]*[:=][[:space:]]*["'"'][^$<{][^"'"']{8,}' .; then
-            echo 'Possível segredo fixo encontrado no repositório.'
-            exit 1
-          fi
+        run: node scripts/check-secrets.mjs
