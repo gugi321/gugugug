@@ -25,8 +25,8 @@ await rm(out, { recursive: true, force: true });
 await cp(source, out, { recursive: true });
 
 await mkdir(resolve(out, 'vendor/three/addons'), { recursive: true });
-await cp(resolve(root, 'node_modules/three/build/three.module.js'), resolve(out, 'vendor/three/three.module.js'));
-await cp(resolve(root, 'node_modules/three/examples/jsm'), resolve(out, 'vendor/three/addons'), { recursive: true });
+await cp(resolve(root, 'node_modules/three-ifc/build/three.module.js'), resolve(out, 'vendor/three/three.module.js'));
+await cp(resolve(root, 'node_modules/three-ifc/examples/jsm'), resolve(out, 'vendor/three/addons'), { recursive: true });
 
 await copyFirst([
   resolve(root, 'node_modules/web-ifc/web-ifc-api.js'),
