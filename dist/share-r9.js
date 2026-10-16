@@ -2,17 +2,27 @@ const $ = id => document.getElementById(id);
 
 let shareConfig = null;
 let rememberedIfc = null;
+const SESSION_KEY = 'eng-gustavo-g-share-key';
+try { localStorage.removeItem('gg-share-upload-key'); } catch {}
 
 async function getShareConfig(){
   if(shareConfig) return shareConfig;
-  const response = await fetch(new URL('share-config.json', document.baseURI), {cache:'no-store'});
+  const response = await fetch(new URL('share-config.json', document.baseURI), {
+    cache:'no-store', credentials:'omit', referrerPolicy:'no-referrer'
+  });
   if(!response.ok) throw new Error('Configuração do compartilhamento não encontrada.');
   shareConfig = await response.json();
   return shareConfig;
 }
 
 function normalizeBackend(value=''){
-  return String(value || '').trim().replace(/\/+$/,'');
+  const raw = String(value || '').trim().replace(/\/+$/,'');
+  if(!raw) return '';
+  const url = new URL(raw);
+  const local = ['localhost','127.0.0.1'].includes(url.hostname);
+  if(url.protocol !== 'https:' && !local) throw new Error('O servidor de compartilhamento precisa usar HTTPS.');
+  if(url.username || url.password) throw new Error('Servidor de compartilhamento inválido.');
+  return url.origin + url.pathname.replace(/\/+$/,'');
 }
 
 function rememberFile(file){
@@ -30,11 +40,13 @@ function currentIfc(){
 }
 
 function getUploadKey(){
-  let key = localStorage.getItem('gg-share-upload-key') || '';
+  let key = '';
+  try { key = sessionStorage.getItem(SESSION_KEY) || ''; } catch {}
   if(!key){
-    key = prompt('Digite a chave de publicação do compartilhamento. Ela é necessária apenas no seu aparelho para criar links públicos.') || '';
+    key = prompt('Digite a chave de publicação. Por segurança, ela ficará somente nesta sessão do navegador.') || '';
     key = key.trim();
-    if(key) localStorage.setItem('gg-share-upload-key', key);
+    if(key.length > 256) throw new Error('Chave de publicação inválida.');
+    if(key){ try { sessionStorage.setItem(SESSION_KEY, key); } catch {} }
   }
   return key;
 }
@@ -46,8 +58,8 @@ function shareState(){
     edges: Boolean($('edges')?.checked),
     showGrid: Boolean($('showGrid')?.checked),
     cut: Boolean($('cut')?.checked),
-    cutAxis: activeAxis,
-    cutPosition: Number($('position')?.value || 50)
+    cutAxis: ['x','y','z'].includes(activeAxis) ? activeAxis : 'z',
+    cutPosition: Math.max(0,Math.min(100,Number($('position')?.value || 50)))
   };
 }
 
@@ -60,11 +72,25 @@ function setShareProgress(percent, text=''){
   label.textContent=text || Math.round(value)+'%';
 }
 
+async function safeFetch(url, options={}){
+  const controller = new AbortController();
+  const timeout = setTimeout(()=>controller.abort(), 45000);
+  try {
+    return await fetch(url, {
+      credentials:'omit',
+      referrerPolicy:'no-referrer',
+      cache:'no-store',
+      ...options,
+      signal: controller.signal
+    });
+  } finally { clearTimeout(timeout); }
+}
+
 async function backendHealth(){
   const cfg = await getShareConfig();
   const backend = normalizeBackend(cfg.backend);
-  if(!backend) throw new Error('O armazenamento gratuito ainda não foi conectado.');
-  const response = await fetch(`${backend}/health`, {cache:'no-store'});
+  if(!backend) throw new Error('O armazenamento seguro ainda não foi conectado.');
+  const response = await safeFetch(`${backend}/health`);
   if(!response.ok) throw new Error('O servidor de compartilhamento não respondeu.');
   return {cfg, backend};
 }
@@ -72,21 +98,25 @@ async function backendHealth(){
 async function createPublicShare(){
   const file = currentIfc();
   if(!file) throw new Error('Abra um IFC antes de criar o link.');
+  if(!/\.ifc$/i.test(file.name)) throw new Error('Somente arquivos IFC podem ser publicados.');
   const {cfg, backend} = await backendHealth();
   const max = Number(cfg.maxModelBytes || 1073741824);
-  if(file.size > max) throw new Error('O IFC ultrapassa o limite de compartilhamento de 1 GB.');
+  if(file.size < 1 || file.size > max) throw new Error('O IFC está vazio ou ultrapassa o limite de compartilhamento.');
+  const header = await file.slice(0,4096).text();
+  if(!header.includes('ISO-10303-21')) throw new Error('O arquivo não parece ser um IFC STEP válido.');
   const uploadKey = getUploadKey();
   if(!uploadKey) throw new Error('A chave de publicação não foi informada.');
 
   const id = [...crypto.getRandomValues(new Uint8Array(16))].map(v=>v.toString(16).padStart(2,'0')).join('');
-  const chunk = Math.min(Number(cfg.chunkSize || 8388608), 16*1024*1024);
+  const chunk = Math.min(Math.max(Number(cfg.chunkSize || 8388608), 1024*1024), 16*1024*1024);
   const total = Math.ceil(file.size / chunk);
+  if(total < 1 || total > 256) throw new Error('Quantidade de partes fora do limite seguro.');
 
   for(let part=0; part<total; part++){
     const start = part * chunk;
     const end = Math.min(file.size, start + chunk);
     setShareProgress((part/total)*92, `Enviando IFC · ${part+1}/${total}`);
-    const response = await fetch(`${backend}/share/${id}/part/${part}`, {
+    const response = await safeFetch(`${backend}/share/${id}/part/${part}`, {
       method:'PUT',
       headers:{
         'Content-Type':'application/octet-stream',
@@ -104,14 +134,14 @@ async function createPublicShare(){
   setShareProgress(95,'Finalizando link público…');
   const meta = {
     id,
-    name:file.name,
+    name:file.name.slice(0,180),
     size:file.size,
     total,
     created:new Date().toISOString(),
     permission:'view',
     state:shareState()
   };
-  const finalResponse = await fetch(`${backend}/share/${id}/meta`, {
+  const finalResponse = await safeFetch(`${backend}/share/${id}/meta`, {
     method:'PUT',
     headers:{'Content-Type':'application/json','X-GG-Share-Key':uploadKey},
     body:JSON.stringify(meta)
@@ -137,7 +167,7 @@ function installShareOverride(){
     $('shareDialog')?.showModal();
     if($('shareLinkRow')) $('shareLinkRow').hidden=true;
     if($('shareProgress')) $('shareProgress').hidden=true;
-    if($('shareStatus')) $('shareStatus').textContent='Verificando armazenamento gratuito…';
+    if($('shareStatus')) $('shareStatus').textContent='Verificando armazenamento seguro…';
     try{
       await backendHealth();
       $('shareStatus').textContent='Pronto. O link abrirá um visualizador público separado e somente leitura.';
@@ -153,9 +183,9 @@ function installShareOverride(){
       const link = await createPublicShare();
       $('shareLink').value=link;
       $('shareLinkRow').hidden=false;
-      $('shareStatus').textContent='Link público criado. Ele é diferente do endereço do aplicativo e abre somente em modo visualização.';
+      $('shareStatus').textContent='Link público criado em modo somente leitura. A chave de publicação não faz parte do link.';
     }catch(error){
-      $('shareStatus').textContent=error.message || String(error);
+      $('shareStatus').textContent=error.name==='AbortError'?'O servidor demorou demais para responder. Tente novamente.':(error.message || String(error));
     }finally{
       createButton.disabled=false;
     }
@@ -182,18 +212,25 @@ async function loadPublicShare({id,backend}){
   backend=normalizeBackend(backend);
   if(!backend) throw new Error('Servidor público não configurado.');
   forceReadOnly();
-  const metaResponse=await fetch(`${backend}/share/${id}/meta`,{cache:'no-store'});
+  const metaResponse=await safeFetch(`${backend}/share/${id}/meta`);
   if(!metaResponse.ok) throw new Error('Projeto compartilhado não encontrado.');
   const meta=await metaResponse.json();
   if(!Number.isInteger(meta.total) || meta.total<1 || meta.total>256) throw new Error('Compartilhamento incompleto.');
+  if(!Number.isSafeInteger(meta.size) || meta.size<1 || meta.size>1073741824) throw new Error('Tamanho do compartilhamento inválido.');
 
   const parts=[];
+  let received=0;
   for(let part=0;part<meta.total;part++){
-    const response=await fetch(`${backend}/share/${id}/part/${part}`,{cache:'no-store'});
+    const response=await safeFetch(`${backend}/share/${id}/part/${part}`);
     if(!response.ok) throw new Error(`Falha ao baixar o IFC · ${part+1}/${meta.total}.`);
-    parts.push(await response.arrayBuffer());
+    const data=await response.arrayBuffer();
+    received+=data.byteLength;
+    if(received>1073741824) throw new Error('Compartilhamento excedeu o limite seguro.');
+    parts.push(data);
   }
-  const file=new File(parts,meta.name||`projeto-${id}.ifc`,{type:'application/x-step'});
+  if(received!==meta.size) throw new Error('O arquivo compartilhado está incompleto.');
+  const safeName=String(meta.name||`projeto-${id}.ifc`).replace(/[\\/\u0000-\u001f]/g,'_').slice(0,180);
+  const file=new File(parts,safeName,{type:'application/x-step'});
   const input=$('file');
   if(!input) throw new Error('Visualizador IFC não encontrado.');
   const dt=new DataTransfer();dt.items.add(file);input.files=dt.files;
@@ -201,10 +238,10 @@ async function loadPublicShare({id,backend}){
 
   const state=meta.state||{};
   setTimeout(()=>{
-    if($('opacity') && Number.isFinite(state.opacity)){$('opacity').value=String(state.opacity);$('opacity').dispatchEvent(new Event('input',{bubbles:true}));}
+    if($('opacity') && Number.isFinite(state.opacity)){$('opacity').value=String(Math.max(0,Math.min(95,state.opacity)));$('opacity').dispatchEvent(new Event('input',{bubbles:true}));}
     if($('edges')){$('edges').checked=Boolean(state.edges);$('edges').dispatchEvent(new Event('change',{bubbles:true}));}
     if($('showGrid')){$('showGrid').checked=state.showGrid!==false;$('showGrid').dispatchEvent(new Event('change',{bubbles:true}));}
-    if($('position') && Number.isFinite(state.cutPosition)){$('position').value=String(state.cutPosition);$('position').dispatchEvent(new Event('input',{bubbles:true}));}
+    if($('position') && Number.isFinite(state.cutPosition)){$('position').value=String(Math.max(0,Math.min(100,state.cutPosition)));$('position').dispatchEvent(new Event('input',{bubbles:true}));}
     forceReadOnly();
   },1200);
 }
