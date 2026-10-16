@@ -50,9 +50,14 @@ jobs:
             if (window.parent === window) return
             let targetOrigin = ''
             try {
-              const parentOrigin = new URL(document.referrer || window.location.href).origin
-              if (parentOrigin === window.location.origin || parentOrigin === 'https://gg-visualizador-ifc.hatchable.site') {
-                targetOrigin = parentOrigin
+              const requestedOrigin = new URLSearchParams(window.location.search).get('parentOrigin') || ''
+              if (requestedOrigin === window.location.origin || requestedOrigin === 'https://gg-visualizador-ifc.hatchable.site') {
+                targetOrigin = requestedOrigin
+              } else if (document.referrer) {
+                const referrerOrigin = new URL(document.referrer).origin
+                if (referrerOrigin === window.location.origin || referrerOrigin === 'https://gg-visualizador-ifc.hatchable.site') {
+                  targetOrigin = referrerOrigin
+                }
               }
             } catch {}
             if (!targetOrigin) return
