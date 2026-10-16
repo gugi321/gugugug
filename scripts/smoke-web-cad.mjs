@@ -48,7 +48,7 @@ try{
   page.on('console',msg=>{if(msg.type()==='error'||msg.type()==='warning')diagnostics.push(`${msg.type()}: ${msg.text()}`);});
   page.on('requestfailed',req=>diagnostics.push(`requestfailed: ${req.url()} :: ${req.failure()?.errorText||''}`));
   await page.goto(url,{waitUntil:'domcontentloaded',timeout:30_000});
-  await page.waitForSelector('#fileInput',{timeout:20_000});
+  await page.waitForSelector('#fileInput',{state:'attached',timeout:20_000});
   await page.locator('#fileInput').setInputFiles(fixture);
   await page.waitForFunction(()=>{
     const status=document.getElementById('status')?.textContent||'';
