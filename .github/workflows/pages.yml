@@ -30,7 +30,7 @@ jobs:
         with:
           node-version: '22.16.0'
 
-      - name: Install locked app dependencies
+      - name: Install app dependencies
         run: npm install --no-audit --no-fund
 
       - name: Build and validate Mini CAD
@@ -42,27 +42,24 @@ jobs:
           node --check dist/share-r9.js
           node --check dist/eng-r10.js
           node --check dist/dimensions-r9.js
+          node --check dist/github-pages.js
+          node --check dist/sw.js
           if [ -f dist/quantities.js ]; then node --check dist/quantities.js; fi
-          if [ -f dist/github-pages.js ]; then node --check dist/github-pages.js; fi
-          if [ -f dist/pwa-r11.js ]; then node --check dist/pwa-r11.js; fi
 
-      - name: Prepare static site
+      - name: Prepare self-contained mobile site
+        run: node scripts/prepare-pages.mjs
+
+      - name: Verify local IFC runtime assets
         shell: bash
         run: |
-          rm -rf site
-          cp -R dist site
-          python - <<'PY'
-          from pathlib import Path
-          p = Path("site/index.html")
-          s = p.read_text(encoding="utf-8")
-          s = s.replace('<base href="/">', '<base href="./">')
-          if 'manifest.webmanifest' not in s:
-              s = s.replace('</head>', '<link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Eng Gustavo G"></head>')
-          if 'github-pages.js' not in s:
-              s = s.replace('</body>', '<script type="module" src="github-pages.js"></script></body>')
-          p.write_text(s, encoding="utf-8")
-          PY
-          touch site/.nojekyll
+          test -s site/vendor/three/three.module.js
+          test -s site/vendor/web-ifc/web-ifc-api.js
+          test -s site/vendor/web-ifc/web-ifc.wasm
+          test -s site/vendor/pdfjs/pdf.mjs
+          test -s site/cad/assets/libredwg-parser-worker.js
+          test -s site/cad/assets/libredwg-web.wasm
+          grep -q "./vendor/web-ifc/web-ifc-api.js" site/app.js
+          grep -q "./vendor/three/three.module.js" site/index.html
 
       - name: Install browser engines for real IFC smoke tests
         run: npx playwright install --with-deps chromium webkit
