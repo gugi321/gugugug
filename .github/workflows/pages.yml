@@ -97,7 +97,7 @@ jobs:
         run: node scripts/smoke-web-cad.mjs
 
       - name: Configure Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
         with:
           enablement: true
 
