@@ -12,6 +12,8 @@ const required = [
   'vendor/web-ifc/web-ifc.wasm',
   'vendor/web-ifc/web-ifc-mt.wasm',
   'vendor/web-ifc/web-ifc-mt.worker.js',
+  'web-ifc-mt.wasm',
+  'web-ifc-mt.worker.js',
   'vendor/pdfjs/pdf.mjs',
   'vendor/pdfjs/pdf.worker.mjs',
   'cad/index.html',
@@ -26,7 +28,7 @@ for (const rel of required) {
   if (!info.isFile() || info.size < 1) throw new Error(`Arquivo de desktop inválido: ${rel}`);
 }
 
-for (const rel of ['vendor/web-ifc/web-ifc.wasm', 'vendor/web-ifc/web-ifc-mt.wasm', 'cad/assets/libredwg-web.wasm']) {
+for (const rel of ['vendor/web-ifc/web-ifc.wasm', 'vendor/web-ifc/web-ifc-mt.wasm', 'web-ifc-mt.wasm', 'cad/assets/libredwg-web.wasm']) {
   const bytes = await readFile(resolve(root, rel));
   if (bytes.length < 500_000) throw new Error(`WASM muito pequeno: ${rel}`);
   if (bytes[0] !== 0x00 || bytes[1] !== 0x61 || bytes[2] !== 0x73 || bytes[3] !== 0x6d) {
@@ -48,4 +50,4 @@ if (app.includes('eng-gustavogil.netlify.app') || app.includes('visualizar-gusta
 }
 if (!runtime.includes('share-fallback-r10.js')) throw new Error('Compartilhamento por arquivo não está ativo.');
 
-console.log('Desktop R11.1 validado: runtime IFC completo, PDF local, CAD/WASM e compartilhamento por arquivo.');
+console.log('Desktop R11.1 validado: runtime IFC completo + aliases pthread, PDF local, CAD/WASM e compartilhamento por arquivo.');
