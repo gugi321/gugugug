@@ -1,17 +1,48 @@
-# Acesso do visualizador IFC
+# Segurança e acesso · Eng Gustavo G
 
-O endereço raiz abre diretamente o visualizador em modo somente leitura. A área `/admin` é reservada ao proprietário e exige a sessão administrativa configurada nas variáveis do Netlify. Links com `?share=...` carregam somente o modelo indicado, sem pedir login e sem exibir controles para abrir outro IFC, enviar PDFs, criar links ou exportar o programa.
+Este aplicativo combina um visualizador estático de IFC/CAD/PDF com um serviço separado para publicar modelos compartilhados. A interface estática, por si só, não deve ser tratada como uma área privada autenticada: quem conhece o endereço do site consegue abrir o visualizador e trabalhar com arquivos locais no próprio navegador.
 
-A regra principal é aplicada no servidor: qualquer `POST /api/share` precisa da sessão administrativa assinada pelo endpoint `/api/auth`. Leituras `GET` do link são permitidas sem login; isso é um link-bearer, portanto o endereço deve ser enviado somente às pessoas escolhidas. PDFs vinculados são somente leitura e usam o mesmo link do projeto principal.
+## Modelo de segurança adotado
 
-## Configuração única no Netlify
+- **Arquivos IFC e DWG abertos localmente** são processados no navegador. Selecionar um arquivo local não o publica automaticamente.
+- **Publicar um IFC para compartilhamento** exige a chave secreta `SHARE_KEY` validada pelo Cloudflare Worker. Essa chave nunca deve ser gravada no repositório.
+- No navegador do proprietário, a chave de publicação fica apenas em `sessionStorage`; ao encerrar a sessão/aba do navegador ela não deve ser tratada como credencial persistente.
+- **Links compartilhados são somente leitura**. Eles funcionam como links-bearer: qualquer pessoa que receber o endereço poderá visualizar o modelo, por isso devem ser enviados somente às pessoas autorizadas.
+- O visualizador público roda separado, em iframe limitado, sem controles de upload, publicação ou edição do projeto.
+- O backend aceita publicação apenas por HTTPS, valida origem, limites de tamanho, quantidade de partes e metadados.
+- Partes de modelos compartilhados usam política `no-store`, reduzindo retenção em caches intermediários.
+- O backend possui rota autenticada para revogação de um compartilhamento e remoção das partes armazenadas.
 
-1. Em **Project configuration → Environment variables**, crie `IFC_ADMIN_USERNAME`.
-2. Crie `IFC_ADMIN_PASSWORD` com uma senha forte e exclusiva.
-3. Crie `IFC_SESSION_SECRET` com uma sequência aleatória longa, diferente da senha.
-4. Deixe as três variáveis disponíveis para **Functions** e faça um novo deploy.
-5. Acesse `https://eng-gustavogil-ifc.netlify.app/admin` para carregar IFCs, PDFs e criar compartilhamentos.
+## Cloudflare Worker / R2
 
-O e-mail e o número de WhatsApp são usados apenas para preparar o encaminhamento do convite. Não há login do visualizador; qualquer pessoa que obtenha o link poderá ver o projeto, mas não poderá gravar nada. Para restringir o acesso a uma identidade, seria necessário um mecanismo de autenticação separado.
+O segredo `SHARE_KEY` deve existir somente como **secret do Worker**. Nunca coloque essa chave em `share-config.json`, JavaScript, commit, issue ou mensagem pública.
 
-Essa configuração não apaga nenhum modelo já compartilhado. Cópias HTML antigas, baixadas antes desta atualização, continuam sendo arquivos locais independentes; gere uma nova cópia somente leitura se ela precisar ser encaminhada.
+Configuração mínima:
+
+1. Vincular o bucket R2 usado pelo Worker como `PROJECTS`.
+2. Criar uma `SHARE_KEY` longa, exclusiva e aleatória como secret do Worker.
+3. Publicar `cloudflare/share-worker.js` no Worker.
+4. Colocar somente a URL HTTPS pública do Worker em `dist/share-config.json` no campo `backend`.
+5. Manter no Worker apenas as origens realmente utilizadas pelo aplicativo.
+
+Se o domínio do aplicativo mudar, atualize a lista de origens permitidas do Worker antes de usar compartilhamento.
+
+## Hospedagem e cabeçalhos
+
+No Netlify, `netlify.toml` define HSTS, CSP, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, limitação de frames e políticas de cache. O GitHub Pages não aplica os cabeçalhos definidos no `netlify.toml`; por isso o aplicativo também usa controles no cliente e isolamento do visualizador público.
+
+Para uma **área administrativa realmente privada**, a etapa seguinte deve ser colocar a aplicação de proprietário atrás de autenticação no provedor de hospedagem/controle de acesso. O segredo de publicação protege as gravações no backend, mas não transforma uma página estática pública em painel administrativo autenticado.
+
+## Rotina operacional recomendada
+
+- Não reutilizar `SHARE_KEY` em outros serviços.
+- Trocar a chave imediatamente se houver suspeita de exposição.
+- Revogar links que não devam mais funcionar.
+- Não colocar dados sigilosos em nome de arquivo ou URL.
+- Manter dependências e GitHub Actions atualizados somente após o build e os testes passarem.
+- Manter uma branch/versão de backup antes de mudanças estruturais.
+- Conferir periodicamente os alertas de dependências do GitHub.
+
+## Limites importantes
+
+Nenhum aplicativo web pode ser considerado absolutamente invulnerável. A segurança depende também das configurações da conta GitHub, Netlify/Cloudflare, proteção do e-mail, autenticação em dois fatores, controle de segredos e atualização das dependências. O objetivo deste projeto é reduzir a superfície de ataque e impedir gravações não autorizadas no serviço de compartilhamento sem prejudicar o uso diário do visualizador.
