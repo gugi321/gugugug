@@ -1,11 +1,13 @@
 import { chromium, webkit } from 'playwright';
 import { createServer } from 'node:http';
 import { createReadStream } from 'node:fs';
-import { stat } from 'node:fs/promises';
+import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize, resolve } from 'node:path';
 
 const root = resolve(process.env.SMOKE_ROOT || 'site');
 const fixture = resolve('tests/fixtures/sample.ifc');
+const fixtureBytes = await readFile(fixture);
+const fixtureInput = { name:'sample.ifc', mimeType:'application/octet-stream', buffer:fixtureBytes };
 const mime = {
   '.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.mjs':'text/javascript; charset=utf-8',
   '.css':'text/css; charset=utf-8','.json':'application/json; charset=utf-8','.wasm':'application/wasm',
@@ -19,8 +21,6 @@ const server = createServer(async (req,res) => {
     if (!file.startsWith(root)) throw new Error('forbidden');
     const info = await stat(file);
     if (!info.isFile()) throw new Error('not-file');
-    // GitHub Pages does not provide COOP/COEP for this site. Keep the smoke test
-    // equivalent to production so web-ifc selects the stable single-thread WASM.
     res.writeHead(200, {
       'Content-Type': mime[extname(file).toLowerCase()] || 'application/octet-stream',
       'Cache-Control':'no-store'
@@ -66,7 +66,9 @@ async function run(name, launcher, options) {
     await page.goto(url, { waitUntil:'domcontentloaded', timeout:30_000 });
     await page.waitForSelector('#file', { timeout:20_000 });
     console.log(`${name} antes do IFC:`, JSON.stringify(await snapshot()));
-    await page.locator('#file').setInputFiles(fixture);
+    // Use bytes instead of an OS path. This avoids platform-specific WebKit
+    // file-handle behavior on Windows while exercising the exact same browser File API.
+    await page.locator('#file').setInputFiles(fixtureInput);
     await page.waitForFunction(() => {
       const welcome = document.getElementById('welcome');
       const layers = document.querySelectorAll('#layers .layer').length;
