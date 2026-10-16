@@ -20,9 +20,29 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.16.0'
+
+      - name: Install locked app dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build and validate Mini CAD
+        run: npm run build:cad
+
+      - name: Validate static JavaScript
+        run: |
+          node --check dist/dwg.js
+          node --check dist/share-r9.js
+          node --check dist/eng-r10.js
+          node --check dist/dimensions-r9.js
+          if [ -f dist/quantities.js ]; then node --check dist/quantities.js; fi
 
       - name: Prepare static site
         shell: bash
