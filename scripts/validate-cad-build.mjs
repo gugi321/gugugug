@@ -2,7 +2,6 @@ import { readFile, stat, readdir } from 'node:fs/promises'
 import { resolve, dirname } from 'node:path'
 
 const ROOT = resolve('dist/cad')
-const EXPECTED_VERSION = '2026-10-14-mini-cad-r7'
 const required = [
   'index.html',
   'assets/libredwg-parser-worker.js',
@@ -55,10 +54,14 @@ for (const name of jsAssets) {
 
 const versionPath = resolve('dist/version.json')
 const version = JSON.parse(await readFile(versionPath, 'utf8'))
-if (version.version !== EXPECTED_VERSION) fail(`version.json=${version.version}; esperado=${EXPECTED_VERSION}`)
+if (!version.version || typeof version.version !== 'string') fail('dist/version.json não contém uma versão válida')
+const features = Array.isArray(version.features) ? version.features : []
+if (!features.includes('mini-cad-online-static')) fail('release atual não declara o Mini CAD online')
+if (!features.includes('dwg-libredwg-web-direct')) fail('release atual não declara o motor LibreDWG')
 
 const parentDwg = await readFile(resolve('dist/dwg.js'), 'utf8')
-if (!parentDwg.includes('20261014-r7')) fail('integração principal não aponta para o Mini CAD R7')
+if (!parentDwg.includes('cad/index.html')) fail('integração principal não aponta para dist/cad')
 if (!parentDwg.includes('GG_CAD_READY')) fail('watchdog do CAD não está presente')
+if (!/CAD_EMBED_VERSION\s*=\s*['"][^'"]+['"]/.test(parentDwg)) fail('versão do iframe CAD não foi definida')
 
-console.log('Mini CAD R7 validado com sucesso: HTML + bundles + workers + WASM + integração.')
+console.log(`Mini CAD validado com sucesso para ${version.version}: HTML + bundles + workers + WASM + integração.`)
