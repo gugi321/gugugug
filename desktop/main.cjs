@@ -138,11 +138,11 @@ async function serveStatic(req, res, url) {
   try {
     const stat = await fsp.stat(file); if (!stat.isFile()) throw new Error('not-file');
     const type = MIME[path.extname(file).toLowerCase()] || 'application/octet-stream';
+    // Do not enable COEP here: web-ifc 0.0.68's pthread worker is not reliable in Electron.
+    // Keeping crossOriginIsolated=false makes web-ifc use the stable single-thread web-ifc.wasm runtime.
     res.writeHead(200, securityHeaders({
       'Content-Type': type,
       'Content-Length': String(stat.size),
-      'Cross-Origin-Opener-Policy': 'same-origin',
-      'Cross-Origin-Embedder-Policy': 'require-corp',
       'Cross-Origin-Resource-Policy': 'same-origin'
     }));
     fs.createReadStream(file).pipe(res);
