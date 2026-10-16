@@ -54,7 +54,7 @@ jobs:
           Write-Host "EXE OK: $($exe.FullName) - $([math]::Round($exe.Length / 1MB, 1)) MB"
 
       - name: Upload executable
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Eng-Gustavo-G-Windows-Portable
           path: release/*.exe
