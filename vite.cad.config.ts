@@ -28,7 +28,7 @@ export default defineConfig({
     viteStaticCopy({
       targets: [
         {
-          src: './node_modules/@mlightcad/cad-simple-viewer/dist/mtext-renderer-worker.js',
+          src: './node_modules/@mlightcad/mtext-renderer/dist/mtext-renderer-worker.js',
           dest: 'assets',
           rename: { stripBase: true }
         },
