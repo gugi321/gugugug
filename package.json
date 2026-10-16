@@ -1,12 +1,18 @@
 {
   "name": "eng-gustavo-g-app",
+  "version": "1.1.0",
+  "productName": "Eng Gustavo G",
   "private": true,
   "type": "module",
+  "main": "desktop/main.cjs",
   "engines": {
     "node": ">=20 <25"
   },
   "scripts": {
-    "build:cad": "node scripts/check-cad-deps.mjs && vite build --config vite.cad.config.ts && vite build --config vite.libredwg-worker.config.ts && node scripts/validate-cad-build.mjs"
+    "build:cad": "node scripts/check-cad-deps.mjs && vite build --config vite.cad.config.ts && vite build --config vite.libredwg-worker.config.ts && node scripts/validate-cad-build.mjs",
+    "prepare:desktop": "node scripts/prepare-desktop.mjs && node scripts/validate-desktop.mjs",
+    "build:desktop": "npm run build:cad && npm run prepare:desktop",
+    "build:windows": "npm run build:desktop && electron-builder --win portable --x64 --publish never"
   },
   "dependencies": {
     "@mlightcad/cad-simple-ui-plugin": "1.7.4",
@@ -15,10 +21,44 @@
     "@mlightcad/libredwg-converter": "3.15.1",
     "@mlightcad/mtext-parser": "1.5.3",
     "@mlightcad/mtext-renderer": "0.13.2",
-    "@netlify/blobs": "10.1.0"
+    "@netlify/blobs": "10.1.0",
+    "pdfjs-dist": "4.10.38",
+    "three": "0.160.1",
+    "web-ifc": "0.0.68"
   },
   "devDependencies": {
+    "electron": "44.8.0",
+    "electron-builder": "26.15.3",
     "typescript": "5.5.2",
     "vite": "6.4.3"
+  },
+  "build": {
+    "appId": "com.enggustavog.app",
+    "productName": "Eng Gustavo G",
+    "asar": true,
+    "compression": "maximum",
+    "forceCodeSigning": false,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "desktop/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "desktop-site",
+        "to": "desktop-site"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "artifactName": "Eng-Gustavo-G-${version}-Windows-portable.${ext}"
+    }
   }
 }
