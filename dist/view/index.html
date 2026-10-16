@@ -3,25 +3,28 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <title>Visualizar Projeto · Eng. Gustavo Gil</title>
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>Eng Gustavo G · Projeto compartilhado</title>
   <style>
     html,body{margin:0;width:100%;height:100%;background:#eef3f5;font-family:Arial,sans-serif;color:#20343d}
     #viewer{position:fixed;inset:0;width:100%;height:100%;border:0;background:#f5f8f9}
     #loading{position:fixed;inset:0;display:grid;place-items:center;background:#eef3f5;z-index:3}
     #card{width:min(420px,calc(100% - 34px));background:#fff;border:1px solid #d5e0e4;border-radius:16px;padding:28px;box-shadow:0 16px 55px #19374218;text-align:center}
     #card strong{display:block;font-size:20px;margin-bottom:9px}#card span{font-size:13px;line-height:1.6;color:#6c8089}
-    #error{color:#a54e2a!important}
+    #error{color:#a54e2a!important}.brand{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6c8089;margin-bottom:10px}
   </style>
 </head>
 <body>
-  <iframe id="viewer" src="../index.html?public-share=1" title="Visualizador público do projeto"></iframe>
-  <div id="loading"><div id="card"><strong>Carregando projeto compartilhado</strong><span id="state">Preparando visualizador somente leitura…</span></div></div>
+  <iframe id="viewer" src="../index.html?public-share=1" title="Eng Gustavo G · visualizador público do projeto" sandbox="allow-scripts allow-same-origin allow-downloads"></iframe>
+  <div id="loading"><div id="card"><div class="brand">Eng Gustavo G</div><strong>Carregando projeto compartilhado</strong><span id="state">Preparando visualizador somente leitura…</span></div></div>
   <script type="module">
     const params=new URLSearchParams(location.search);const id=params.get('share');
     const frame=document.getElementById('viewer'),loading=document.getElementById('loading'),state=document.getElementById('state');
-    const cfgResponse=await fetch('../share-config.json',{cache:'no-store'}).catch(()=>null);
+    const cfgResponse=await fetch('../share-config.json',{cache:'no-store',credentials:'omit',referrerPolicy:'no-referrer'}).catch(()=>null);
     const cfg=cfgResponse?.ok?await cfgResponse.json():{};
-    const backend=String(cfg.backend||'').replace(/\/+$/,'');
+    let backend='';
+    try{const u=new URL(String(cfg.backend||''));if(u.protocol==='https:'||['localhost','127.0.0.1'].includes(u.hostname))backend=u.href.replace(/\/+$/,'');}catch{}
     function fail(message){state.id='error';state.textContent=message;}
     if(!/^[a-f0-9]{32}$/i.test(id||'')) fail('Link de compartilhamento inválido.');
     else if(!backend) fail('O servidor de compartilhamento ainda não foi configurado.');
