@@ -12,7 +12,7 @@ rem ============================================================
 
 set "APP_NAME=Eng Gustavo G"
 set "REPO=gugi321/gugugug"
-set "REF=6590720b4b45db2282be2c1fea5a4e12dc7f38f8"
+set "REF=b78c59b114506c5e1c22876c4dbd98e2f087404f"
 set "NETLIFY_SITE_ID=aab275a5-d207-4472-810a-c8c6cf293f78"
 set "NETLIFY_URL=https://eng-gustavogil.netlify.app"
 set "WORK=%TEMP%\Eng-Gustavo-G-AutoDeploy"
