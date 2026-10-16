@@ -1,19 +1,8 @@
-name: Deploy GitHub Pages
+name: Build, Test and Deploy GitHub Pages
 
 on:
   push:
     branches: [main]
-    paths:
-      - 'dist/**'
-      - 'cad-app/**'
-      - 'scripts/prepare-pages.mjs'
-      - 'scripts/smoke-web-ifc.mjs'
-      - 'scripts/smoke-web-cad.mjs'
-      - 'tests/fixtures/**'
-      - 'vite.cad.config.ts'
-      - 'vite.libredwg-worker.config.ts'
-      - 'package.json'
-      - '.github/workflows/pages.yml'
   workflow_dispatch:
 
 permissions:
@@ -32,6 +21,8 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     timeout-minutes: 35
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -63,10 +54,12 @@ jobs:
       - name: Verify local IFC/CAD runtime assets
         shell: bash
         run: |
+          test -s site/index.html
           test -s site/vendor/three/three.module.js
           test -s site/vendor/web-ifc/web-ifc-api.js
           test -s site/vendor/web-ifc/web-ifc.wasm
           test -s site/vendor/pdfjs/pdf.mjs
+          test -s site/cad/index.html
           test -s site/cad/assets/libredwg-parser-worker.js
           test -s site/cad/assets/libredwg-web.wasm
           grep -q "./vendor/web-ifc/web-ifc-api.js" site/app.js
@@ -101,11 +94,33 @@ jobs:
         with:
           enablement: true
 
-      - name: Upload artifact
+      - name: Upload tested site
         uses: actions/upload-pages-artifact@v4
         with:
           path: site
 
-      - name: Deploy
+      - name: Deploy tested site
         id: deployment
         uses: actions/deploy-pages@v4
+
+  verify-live:
+    name: Verify live GitHub Pages
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Validate deployed page and critical runtime files
+        shell: bash
+        env:
+          PAGE_URL: ${{ needs.deploy.outputs.page_url }}
+        run: |
+          set -euo pipefail
+          BASE="${PAGE_URL%/}"
+          echo "Validating $BASE"
+          curl --fail --location --retry 6 --retry-delay 5 --header 'Cache-Control: no-cache' "$BASE/?health=${GITHUB_SHA}" --output /tmp/index.html
+          grep -qi 'Eng Gustavo G' /tmp/index.html
+          curl --fail --location --retry 6 --retry-delay 5 "$BASE/vendor/web-ifc/web-ifc.wasm" --output /dev/null
+          curl --fail --location --retry 6 --retry-delay 5 "$BASE/cad/index.html" --output /dev/null
+          curl --fail --location --retry 6 --retry-delay 5 "$BASE/cad/assets/libredwg-web.wasm" --output /dev/null
+          curl --fail --location --retry 6 --retry-delay 5 "$BASE/cad/assets/libredwg-parser-worker.js" --output /dev/null
+          echo 'LIVE_DEPLOY_OK'
