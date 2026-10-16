@@ -1,7 +1,7 @@
 {
   "version": "r9",
   "backend": "",
-  "viewerPath": "https://gugi321.github.io/111/",
+  "viewerPath": "view/",
   "chunkSize": 8388608,
   "maxModelBytes": 1073741824
 }
