@@ -7,6 +7,8 @@ on:
       - 'desktop/**'
       - 'scripts/prepare-desktop.mjs'
       - 'scripts/validate-desktop.mjs'
+      - 'scripts/smoke-desktop-ifc.mjs'
+      - 'tests/fixtures/**'
       - 'cad-app/**'
       - 'vite.cad.config.ts'
       - 'vite.libredwg-worker.config.ts'
@@ -25,7 +27,7 @@ concurrency:
 jobs:
   build-windows:
     runs-on: windows-latest
-    timeout-minutes: 35
+    timeout-minutes: 40
     env:
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
     steps:
@@ -40,7 +42,7 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Build CAD and desktop app
+      - name: Build, open real IFC, and package Windows app
         run: npm run build:windows
 
       - name: Verify executable
