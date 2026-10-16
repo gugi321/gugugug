@@ -28,14 +28,19 @@ await mkdir(resolve(out, 'vendor/three/addons'), { recursive: true });
 await cp(resolve(root, 'node_modules/three-ifc/build/three.module.js'), resolve(out, 'vendor/three/three.module.js'));
 await cp(resolve(root, 'node_modules/three-ifc/examples/jsm'), resolve(out, 'vendor/three/addons'), { recursive: true });
 
+await mkdir(resolve(out, 'vendor/web-ifc'), { recursive: true });
 await copyFirst([
-  resolve(root, 'node_modules/web-ifc/web-ifc-api.js'),
-  resolve(root, 'node_modules/web-ifc/web-ifc-api-node.js')
+  resolve(root, 'node_modules/web-ifc/web-ifc-api.js')
 ], resolve(out, 'vendor/web-ifc/web-ifc-api.js'));
 await copyFirst([
-  resolve(root, 'node_modules/web-ifc/web-ifc.wasm'),
-  resolve(root, 'node_modules/web-ifc/wasm/web-ifc.wasm')
+  resolve(root, 'node_modules/web-ifc/web-ifc.wasm')
 ], resolve(out, 'vendor/web-ifc/web-ifc.wasm'));
+await copyFirst([
+  resolve(root, 'node_modules/web-ifc/web-ifc-mt.wasm')
+], resolve(out, 'vendor/web-ifc/web-ifc-mt.wasm'));
+await copyFirst([
+  resolve(root, 'node_modules/web-ifc/web-ifc-mt.worker.js')
+], resolve(out, 'vendor/web-ifc/web-ifc-mt.worker.js'));
 
 await mkdir(resolve(out, 'vendor/pdfjs'), { recursive: true });
 await cp(resolve(root, 'node_modules/pdfjs-dist/build/pdf.mjs'), resolve(out, 'vendor/pdfjs/pdf.mjs'));
@@ -75,7 +80,7 @@ import './share-fallback-r10.js';
 document.body.classList.add('desktop-app');
 document.title='Eng Gustavo G';
 const version=document.querySelector('.build-version');
-if(version)version.textContent='Aplicativo Windows · R11';
+if(version)version.textContent='Aplicativo Windows · R11.1';
 const hint=document.getElementById('pdfOwnerHint');
 if(hint)hint.textContent='PDFs são guardados localmente neste computador. Nenhum crédito de hospedagem é necessário.';
 const shareStatus=document.getElementById('shareStatus');
