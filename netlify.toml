@@ -14,6 +14,7 @@
   for = "/*.js"
   [headers.values]
     Content-Type = "text/javascript; charset=utf-8"
+    X-Content-Type-Options = "nosniff"
 
 [[headers]]
   for = "/cad/*"
@@ -21,10 +22,23 @@
     Cache-Control = "no-cache, no-store, must-revalidate"
 
 [[headers]]
+  for = "/share-config.json"
+  [headers.values]
+    Cache-Control = "no-store, max-age=0"
+
+[[headers]]
+  for = "/view/*"
+  [headers.values]
+    Cache-Control = "no-store, max-age=0"
+
+[[headers]]
   for = "/*"
   [headers.values]
     X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "strict-origin-when-cross-origin"
-    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    Referrer-Policy = "no-referrer"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), bluetooth=()"
     X-Frame-Options = "SAMEORIGIN"
-    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+    X-Permitted-Cross-Domain-Policies = "none"
+    Cross-Origin-Opener-Policy = "same-origin-allow-popups"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data: https://cdn.jsdelivr.net; connect-src 'self' https://cdn.jsdelivr.net https://*.workers.dev; worker-src 'self' blob:; child-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests"
