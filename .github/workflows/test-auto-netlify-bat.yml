@@ -1,0 +1,30 @@
+name: Test AUTO Netlify BAT
+
+on:
+  push:
+    paths:
+      - 'tools/Eng-Gustavo-G-AUTO-NETLIFY.bat'
+      - '.github/workflows/test-auto-netlify-bat.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-bat:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      ENG_GUSTAVO_TEST_ONLY: '1'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Run the same BAT in test mode
+        shell: cmd
+        run: call tools\Eng-Gustavo-G-AUTO-NETLIFY.bat
