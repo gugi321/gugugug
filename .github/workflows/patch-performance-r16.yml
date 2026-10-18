@@ -1,0 +1,52 @@
+name: Apply R16 performance patch
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/patch-performance-r16.py'
+      - '.github/workflows/patch-performance-r16.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply R16 patch
+        run: python scripts/patch-performance-r16.py
+      - name: Validate JavaScript and performance guards
+        shell: bash
+        run: |
+          node --check dist/app.js
+          node --check dist/dwg.js
+          node --check dist/dimensions-r9.js
+          node --check dist/github-pages.js
+          node --check dist/sw.js
+          grep -q "preserveDrawingBuffer:false" dist/app.js
+          ! grep -q "setAnimationLoop" dist/app.js
+          grep -q "input\[type=\\\"file\\\"\]" dist/app.js
+          ! grep -q "loading=\"eager\"" dist/dwg.js
+          ! grep -q "import('./quantities.js').catch" dist/dwg.js
+          ! grep -q "import './eng-r10.js'" dist/dimensions-r9.js
+          grep -q "eng-gustavo-g-r16" dist/sw.js
+          grep -q "R16 leve" dist/index.html
+      - name: Commit generated files
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo 'No changes to commit.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add dist/app.js dist/dwg.js dist/dimensions-r9.js dist/github-pages.js dist/sw.js dist/ui-polish-r15.css dist/index.html
+          git commit -m 'R16: lighten renderer, cut view and lazy-load tools'
+          git push
