@@ -23,6 +23,8 @@ async function pageFor(fixture,count){
 function assert(ok,msg){if(!ok)throw Error(msg)}
 async function hudInside(page,sel){return page.evaluate(sel=>{const e=document.querySelector(sel),r=e?.getBoundingClientRect();return Boolean(e&&!e.hidden&&r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight);},sel)}
 async function closeDimensions(page){await page.locator('#ggDimensionHud .gg-hud-close').click();await page.waitForFunction(()=>document.querySelector('#ggDimensionHud')?.hidden===true)}
+async function dimensionText(page,id){await page.evaluate(id=>window.GG_VIEWER_API.selectID(id),id);await page.getByRole('button',{name:/Isolar e cotar/i}).click();await page.waitForFunction(()=>!document.querySelector('#ggDimensionHud')?.hidden);const text=await page.locator('#ggDimensionHudValues').innerText();assert(await hudInside(page,'#ggDimensionHud'),`HUD de cotas #${id} saiu da tela mobile`);return text}
+async function openCut(page){await page.getByRole('button',{name:'Ver corte transversal'}).click();await page.waitForFunction(()=>window.GG_VIEWER_API.getSectionDebug().active&&document.querySelector('#ggSectionHud')?.hidden===false)}
 
 try{
   // Viga armada: cotas + corte + posições 20/50/80.
@@ -34,8 +36,7 @@ try{
   assert(/B: 20,0 cm/.test(dims)&&/H: 40,0 cm/.test(dims)&&/L: 500,0 cm/.test(dims),'Cotas da viga não apareceram no HUD');
   assert(await hudInside(page,'#ggDimensionHud'),'HUD de cotas saiu da tela mobile');
   await closeDimensions(page);
-  await page.getByRole('button',{name:/Ver corte transversal/i}).click();
-  await page.waitForFunction(()=>!document.querySelector('#ggSectionHud')?.hidden);
+  await openCut(page);
   for(const pos of [20,50,80]){
     await page.locator('#ggSectionRange').fill(String(pos));
     await page.locator('#ggSectionRange').dispatchEvent('input');
@@ -64,7 +65,7 @@ try{
   assert(await hudInside(page,'#ggSectionHud'),'HUD do pilar saiu da tela mobile');
   await page.close();
 
-  // Laje: cotas semânticas e corte geométrico.
+  // Laje comum: cotas semânticas e corte geométrico.
   page=await pageFor('tests/fixtures/sample.ifc','3 / 3');
   await page.evaluate(()=>window.GG_VIEWER_API.selectID(16));
   await page.getByRole('button',{name:/Isolar e cotar/i}).click();
@@ -73,15 +74,38 @@ try{
   assert(/L: 600,0 cm/.test(slabDims)&&/B: 600,0 cm/.test(slabDims)&&/Esp.: 20,0 cm/.test(slabDims),'Cotas da laje incorretas');
   assert(await hudInside(page,'#ggDimensionHud'),'HUD da laje saiu da tela mobile');
   await closeDimensions(page);
-  await page.getByRole('button',{name:'Ver corte transversal'}).click();
-  await page.waitForFunction(()=>window.GG_VIEWER_API.getSectionDebug().active);
+  await openCut(page);
   const slabCut=await page.locator('#ggSectionHudValues').innerText();
   assert(/Esp.: 20,0 cm/.test(slabCut)&&/Larg.: 600,0 cm/.test(slabCut),'Corte da laje não identificou largura/espessura');
   assert(await hudInside(page,'#ggSectionHud'),'HUD de corte da laje saiu da tela mobile');
   await page.close();
 
+  // Geometrias representativas do IFC de 8,2 MB enviado pelo usuário.
+  page=await pageFor('tests/fixtures/uploaded-shapes.ifc','3 / 3');
+  let text=await dimensionText(page,100);
+  assert(/B: 15,0 cm/.test(text)&&/H: 30,0 cm/.test(text)&&/L: 237,5 cm/.test(text),'V1 real: cotas 15x30x237,5 não reconhecidas');
+  await closeDimensions(page);await openCut(page);
+  text=await page.locator('#ggSectionHudValues').innerText();
+  assert(/B: 15,0 cm/.test(text)&&/H: 30,0 cm/.test(text)&&/Peça: 237,5 cm/.test(text),'V1 real: corte B/H/L incorreto');
+  await page.getByRole('button',{name:'Voltar'}).click();
+
+  text=await dimensionText(page,200);
+  assert(/B: 15,0 cm/.test(text)&&/H: 30,0 cm/.test(text)&&/L: 110,0 cm/.test(text),'P1 real: cotas 15x30x110 não reconhecidas');
+  await closeDimensions(page);await openCut(page);
+  text=await page.locator('#ggSectionHudValues').innerText();
+  assert(/B: 15,0 cm/.test(text)&&/H: 30,0 cm/.test(text)&&/Peça: 110,0 cm/.test(text),'P1 real: corte B/H/L incorreto');
+  await page.getByRole('button',{name:'Voltar'}).click();
+
+  text=await dimensionText(page,300);
+  assert(/L: 645,0 cm/.test(text)&&/B: 10,0 cm/.test(text)&&/Esp.: 10,0 cm/.test(text),'L1 estreita: espessura vertical de 10 cm não reconhecida');
+  await closeDimensions(page);await openCut(page);
+  text=await page.locator('#ggSectionHudValues').innerText();
+  assert(/Larg.: 10,0 cm/.test(text)&&/Esp.: 10,0 cm/.test(text)&&/Peça: 645,0 cm/.test(text),'L1 estreita: corte não distinguiu largura e espessura de 10 cm');
+  assert(await hudInside(page,'#ggSectionHud'),'HUD do fixture do IFC real saiu da tela mobile');
+  await page.close();
+
   if(diagnostics.length)throw Error(diagnostics.join('\n'));
-  console.log('R35 MOBILE CUTS OK: viga, pilar, laje, B/H/Esp. e 20/50/80%.');
+  console.log('R35 MOBILE CUTS OK: fixtures genéricos + V1/P1/L1 representativos do IFC enviado.');
 }finally{
   await browser.close();
   await new Promise(r=>server.close(r));
