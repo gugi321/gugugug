@@ -162,7 +162,13 @@ export function createInspector(api, W, modelID) {
       const bar=line(barID),out=[],start=rows.length,prior=visited;visited=new Set();
       objectProperties(barID,'Barra · ');
       const properties=rows.splice(start);visited=prior;
-      const roleText=properties.filter(r=>/role|funcao|posicao|position|classification|classificacao/.test(key(r))).map(r=>r.value).join(' ');
+      let typeText='';
+      for(const rel of index('IFCRELDEFINESBYTYPE','RelatedObjects').get(barID)||[]){
+        const t=line(rel.RelatingType);if(!t)continue;
+        typeText+=' '+[name(t.Name),name(t.ObjectType),name(t.PredefinedType)].filter(Boolean).join(' ');
+        for(const k of ['NominalDiameter','LongitudinalBarNominalDiameter','TransverseBarNominalDiameter'])if(t[k]!=null)out.push({value:format(t[k],k),roleText:typeText});
+      }
+      const roleText=(properties.filter(r=>/role|funcao|posicao|position|classification|classificacao/.test(key(r))).map(r=>r.value).join(' ')+' '+typeText).trim();
       for(const k of ['NominalDiameter','LongitudinalBarNominalDiameter','TransverseBarNominalDiameter'])if(bar[k]!=null)out.push({value:format(bar[k],k),roleText});
       for(const row of properties)if(/diameter|diametro|bitola/.test(key(row)))out.push({...row,roleText:roleText+' '+row.key+' '+row.group});
       return out;
@@ -171,7 +177,7 @@ export function createInspector(api, W, modelID) {
       const t=norm(text),hits=[];
       if(/superior|upper|top/.test(t))hits.push('Armadura superior');
       if(/inferior|lower|bottom/.test(t))hits.push('Armadura inferior');
-      if(/estrib|stirrup|shear|transversal/.test(t))return 'Estribos · transversal';
+      if(/estrib|stirrup|ligature|tie|shear|transversal/.test(t))return 'Estribos · transversal';
       if(/pele|skin|lateral/.test(t))return 'Armadura de pele';
       return hits.length===1?hits[0]:/longitudinal/.test(t)&&!hits.length?'Longitudinal sem posição definida':'Sem classificação no IFC';
     }
