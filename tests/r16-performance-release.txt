@@ -1,1 +1,1 @@
-R16 performance release: demand-driven WebGL rendering, compact section UI, lazy CAD/tools/quantities, hidden native file inputs, cached discipline classification, and lighter cut annotations.
+R16 performance release: demand-driven WebGL rendering, compact section UI, lazy CAD/tools/quantities, hidden native file inputs, cached discipline classification, lighter cut annotations, and lazy Quantitativos initialization fixed.
