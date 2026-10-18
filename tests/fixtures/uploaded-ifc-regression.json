@@ -1,0 +1,48 @@
+{
+  "source": "Anonymized regression facts extracted from the user-supplied IFC used for R35 validation",
+  "schema": "IFC4",
+  "length_unit": "centimeter",
+  "file_bytes": 8508731,
+  "entity_counts": {
+    "IFCBEAM": 208,
+    "IFCCOLUMN": 98,
+    "IFCSLAB": 13,
+    "IFCREINFORCINGBAR": 7030,
+    "IFCFOOTING": 36,
+    "IFCBUILDINGSTOREY": 4
+  },
+  "representative_geometry_cm": {
+    "beam_V1": {"B": 15.0, "H": 30.0, "L": 237.5},
+    "column_P1": {"B": 15.0, "H": 30.0, "L": 110.0},
+    "narrow_slab_L1": {"plan_length": 645.0, "plan_width": 10.0, "thickness": 10.0}
+  },
+  "beam_sections_cm": {
+    "15x30": 129,
+    "15x50": 49,
+    "15x40": 15,
+    "15x20": 15
+  },
+  "column_sections_cm": {
+    "15x30": 74,
+    "15x40": 10,
+    "15x45": 8,
+    "35x40": 4,
+    "15x25": 2
+  },
+  "rebar_diameter_counts_mm": {
+    "5.0": 5380,
+    "6.3": 32,
+    "8.0": 929,
+    "10.0": 643,
+    "12.5": 46
+  },
+  "duplicate_beam_name_storey_groups": 67,
+  "integrity": {
+    "parsed_step_entities": 157595,
+    "missing_internal_references": 0,
+    "all_beams_have_geometry": true,
+    "all_columns_have_geometry": true,
+    "all_slabs_have_geometry": true,
+    "all_rebars_have_geometry": true
+  }
+}
