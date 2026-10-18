@@ -1,5 +1,6 @@
 from pathlib import Path
 
+# Reinforcement association fallback: geometric overlap + IFC type metadata.
 # --- properties.js: read diameter/role from IfcReinforcingBarType ---
 prop_path=Path('dist/properties.js')
 prop=prop_path.read_text(encoding='utf-8')
