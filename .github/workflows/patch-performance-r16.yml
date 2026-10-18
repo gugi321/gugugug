@@ -20,6 +20,17 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Normalize R16 matcher
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/patch-performance-r16.py')
+          t=p.read_text(encoding='utf-8')
+          t=t.replace('    " camera.up.copy(f.v);camera.position.copy(center)', '    "camera.up.copy(f.v);camera.position.copy(center)')
+          t=t.replace('    " camera.up.copy(f.v);camera.position.copy(center)', '    "camera.up.copy(f.v);camera.position.copy(center)')
+          p.write_text(t,encoding='utf-8')
+          PY
       - name: Apply R16 patch
         run: python scripts/patch-performance-r16.py
       - name: Validate JavaScript and performance guards
