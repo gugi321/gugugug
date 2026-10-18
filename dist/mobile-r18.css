@@ -1,0 +1,27 @@
+@media (max-width:760px){
+  header{height:54px!important;min-height:54px!important;display:grid!important;grid-template-columns:34px minmax(0,1.15fr) minmax(0,.95fr) minmax(0,.9fr)!important;align-items:center!important;gap:4px!important;padding:max(6px,env(safe-area-inset-top)) max(6px,env(safe-area-inset-right)) 6px max(6px,env(safe-area-inset-left))!important;overflow:hidden!important}
+  header .brand{grid-column:1!important;width:34px!important;min-width:34px!important;max-width:34px!important;margin:0!important;display:block!important;overflow:visible!important}
+  header .brand>div{display:none!important}
+  header .mark{display:grid!important;width:34px!important;height:34px!important;min-width:34px!important;padding:0!important;place-items:center!important;font-size:13px!important;line-height:1!important}
+  header #filename,#projectPDFs{display:none!important}
+  header #share{grid-column:2!important}
+  header #toolsLazyButton,header #engToolsButton{grid-column:3!important}
+  header .open{grid-column:4!important}
+  header>#share,header>#toolsLazyButton,header>#engToolsButton,header>.open{width:100%!important;min-width:0!important;max-width:100%!important;height:38px!important;min-height:38px!important;margin:0!important;padding:5px 4px!important;font-size:10px!important;line-height:1.1!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+  body.section-active #informationDock #selection.inspector{height:auto!important;min-height:0!important;max-height:240px!important;overflow:auto!important}
+  body.section-active #selection.mobile-expanded{max-height:240px!important}
+  body.section-active .inspector-head{min-height:38px!important;padding:6px 10px!important;position:sticky!important;top:0!important;z-index:2!important}
+  body.section-active .inspector-head h2{font-size:13px!important;margin:0!important}
+  body.section-active #elementSection{margin:0!important;padding:7px 9px!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:5px 7px!important}
+  body.section-active #elementSection strong{font-size:11px!important}
+  body.section-active #elementSection label{font-size:10px!important;margin:0!important;min-width:0!important}
+  body.section-active #elementSection select,body.section-active #closeSection{min-height:32px!important;height:32px!important;font-size:11px!important;padding:3px 5px!important;margin:2px 0!important;max-width:100%!important}
+  body.section-active #sectionPosition{min-height:22px!important;height:22px!important;margin:3px 0!important}
+}
+@media (max-width:420px){
+  header{grid-template-columns:32px minmax(0,1.18fr) minmax(0,.92fr) minmax(0,.9fr)!important}
+  header .brand,header .mark{width:32px!important;min-width:32px!important;max-width:32px!important}
+  header .mark{height:32px!important;font-size:12px!important}
+  header>#share,header>#toolsLazyButton,header>#engToolsButton,header>.open{font-size:9.5px!important;padding:4px 3px!important}
+  body.section-active #informationDock #selection.inspector,body.section-active #selection.mobile-expanded{max-height:228px!important}
+}
