@@ -197,17 +197,21 @@ function refreshSectionPresentation(){
  const s=elementSection,f=s?.frame;if(!s||!f)return;if(!sectionContextGroup)rebuildSectionContext();clearSectionAnnotations();sectionAnnotationGroup=new T.Group();sectionAnnotationGroup.name='GG_SECTION_ANNOTATIONS';scene.add(sectionAnnotationGroup);
  const mid1=(f.lo[1]+f.hi[1])/2,mid2=(f.lo[2]+f.hi[2])/2,planeCenter=f.n.clone().multiplyScalar(s.at).addScaledVector(f.u,mid1).addScaledVector(f.v,mid2);
  const width=f.hi[1]-f.lo[1],height=f.hi[2]-f.lo[2],length=f.hi[0]-f.lo[0],cross=Math.max(width,height,.05),piece=Math.max(length,cross,.1),gap=Math.max(cross*.18,Math.min(piece*.01,cross*.22),.025),labelSize=Math.max(cross*.075,Math.min(piece*.008,cross*.14),.026);
+ const hostType=String(meshes.find(m=>m.userData.id===s.hostID)?.userData.type||''),uVertical=Math.abs(f.u.z),vVertical=Math.abs(f.v.z);let uLabel='B',vLabel='H';
+ if(/IFCBEAM|IFCMEMBER/.test(hostType)){if(uVertical>=vVertical){uLabel='H';vLabel='B';}}
+ else if(/IFCCOLUMN|IFCPILE/.test(hostType)){if(width>height){uLabel='H';vLabel='B';}}
+ else if(/IFCSLAB|IFCPLATE/.test(hostType)){if(uVertical>=vVertical){uLabel='Esp.';vLabel='Larg.';}else{uLabel='Larg.';vLabel='Esp.';}}
  const u1=f.n.clone().multiplyScalar(s.at).addScaledVector(f.u,f.lo[1]).addScaledVector(f.v,f.lo[2]-gap),u2=f.n.clone().multiplyScalar(s.at).addScaledVector(f.u,f.hi[1]).addScaledVector(f.v,f.lo[2]-gap);
  const v1=f.n.clone().multiplyScalar(s.at).addScaledVector(f.u,f.hi[1]+gap).addScaledVector(f.v,f.lo[2]),v2=f.n.clone().multiplyScalar(s.at).addScaledVector(f.u,f.hi[1]+gap).addScaledVector(f.v,f.hi[2]);
  const ue1=f.n.clone().multiplyScalar(s.at).addScaledVector(f.u,f.lo[1]).addScaledVector(f.v,f.lo[2]),ue2=f.n.clone().multiplyScalar(s.at).addScaledVector(f.u,f.hi[1]).addScaledVector(f.v,f.lo[2]),ve1=ue2.clone(),ve2=f.n.clone().multiplyScalar(s.at).addScaledVector(f.u,f.hi[1]).addScaledVector(f.v,f.hi[2]);
  const cm=v=>new Intl.NumberFormat('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1}).format(v*100)+' cm',along=Math.max(0,s.at-f.lo[0]),m=v=>new Intl.NumberFormat('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}).format(v)+' m';
- sectionLine([ue1,u1,ue2,u2,ve1,v1,ve2,v2],0x7bc7d7);sectionDimension(u1,u2,f.v.clone().negate(),'B · '+cm(width),labelSize);sectionDimension(v1,v2,f.u,'H · '+cm(height),labelSize);
+ sectionLine([ue1,u1,ue2,u2,ve1,v1,ve2,v2],0x7bc7d7);sectionDimension(u1,u2,f.v.clone().negate(),uLabel+' · '+cm(width),labelSize);sectionDimension(v1,v2,f.u,vLabel+' · '+cm(height),labelSize);
  const meta=new Map((s.barData||[]).map(b=>[Number(b.id),b])),callouts=[];
  for(const [id,b] of meta){if(!b?.diameters?.length)continue;const ms=meshes.filter(m=>m.userData.id===id);if(!ms.length)continue;let min=Infinity,max=-Infinity,bb=new T.Box3();for(const m of ms){const r=sectionRangeAlong(m,f.n);min=Math.min(min,r[0]);max=Math.max(max,r[1]);bb.union(new T.Box3().setFromObject(m));}const halfBand=Math.max(0,Number($('sectionThickness').value)||0)/2;if(s.at<min-halfBand-.01||s.at>max+halfBand+.01)continue;const p=bb.getCenter(new T.Vector3()),spanN=max-min;if(spanN>Math.max(halfBand*1.5,.05))p.addScaledVector(f.n,s.at-p.dot(f.n));callouts.push({id,p,text:'Ø '+b.diameters.join(' / '),role:b.role||''});
  }
  const uniqueCallouts=[];const seenCallouts=new Set();for(const c of callouts.sort((a,b)=>a.p.distanceToSquared(planeCenter)-b.p.distanceToSquared(planeCenter))){const key=c.text+'|'+c.role;if(seenCallouts.has(key))continue;seenCallouts.add(key);uniqueCallouts.push(c)}
  uniqueCallouts.slice(0,6).forEach((c,i)=>{let radial=c.p.clone().sub(planeCenter);radial.addScaledVector(f.n,-radial.dot(f.n));if(radial.lengthSq()<1e-8)radial=(i%2?f.u:f.v).clone();radial.normalize();const labelPos=c.p.clone().addScaledVector(radial,cross*(.24+(i%3)*.065)+Math.min(piece*.006,cross*.08)).addScaledVector(f.n,Math.min(piece*.004,cross*.05));const dir=c.p.clone().sub(labelPos),dist=dir.length();if(dist>.001){dir.normalize();const arrow=new T.ArrowHelper(dir,labelPos,dist,0xff8b42,Math.min(labelSize*.62,dist*.3),Math.min(labelSize*.3,dist*.14));arrow.userData.ggRebarCallout=true;arrow.line.material.depthTest=false;arrow.cone.material.depthTest=false;arrow.line.renderOrder=58;arrow.cone.renderOrder=58;sectionAnnotationGroup.add(arrow);}sectionSprite(c.text,labelPos,labelSize*.78);});
- window.GG_SECTION_INFO={width:cm(width),height:cm(height),position:Number($('sectionPosition').value),positionText:(Number($('sectionPosition').value)).toLocaleString('pt-BR')+'% · '+m(along),bars:[...new Set(uniqueCallouts.map(c=>c.text))],pieceLength:cm(length)};window.dispatchEvent(new CustomEvent('gg-section-update'));
+ window.GG_SECTION_INFO={width:cm(width),height:cm(height),widthLabel:uLabel,heightLabel:vLabel,position:Number($('sectionPosition').value),positionText:(Number($('sectionPosition').value)).toLocaleString('pt-BR')+'% · '+m(along),bars:[...new Set(uniqueCallouts.map(c=>c.text))],pieceLength:cm(length)};window.dispatchEvent(new CustomEvent('gg-section-update'));
 }
 function frameSection(){
  const s=elementSection,f=s?.frame;if(!f)return;transition=null;
@@ -258,7 +262,7 @@ function dimensionLabels(data){
  }else if(/IFCCOLUMN|IFCPILE/.test(type)){
   labels[longest]='L';const rest=idx.filter(i=>i!==longest).sort((a,b)=>data.values[a]-data.values[b]);labels[rest[0]]='B';labels[rest[1]]='H';
  }else if(/IFCSLAB|IFCPLATE/.test(type)){
-  const thick=idx.reduce((a,b)=>data.values[b]<data.values[a]?b:a,0),rest=idx.filter(i=>i!==thick).sort((a,b)=>data.values[b]-data.values[a]);labels[thick]='Esp.';labels[rest[0]]='L';labels[rest[1]]='B';
+  const minValue=Math.min(...data.values),near=idx.filter(i=>data.values[i]<=minValue*1.05+.002),thick=near.reduce((a,b)=>Math.abs(data.basis[b].z)>Math.abs(data.basis[a].z)?b:a,near[0]),rest=idx.filter(i=>i!==thick).sort((a,b)=>data.values[b]-data.values[a]);labels[thick]='Esp.';labels[rest[0]]='L';labels[rest[1]]='B';
  }else if(/IFCWALL/.test(type)){
   const thick=idx.reduce((a,b)=>data.values[b]<data.values[a]?b:a,0),rest=idx.filter(i=>i!==thick),h=rest.reduce((a,b)=>Math.abs(data.basis[b].z)>Math.abs(data.basis[a].z)?b:a,rest[0]);labels[thick]='Esp.';labels[h]='H';labels[rest.find(i=>i!==h)]='L';
  }
