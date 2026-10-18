@@ -15,7 +15,6 @@ const diagnostics=[];
 async function pageFor(fixture,count){
   const page=await browser.newPage({viewport:{width:390,height:844}});
   page.on('pageerror',e=>diagnostics.push(`pageerror: ${e.message}`));
-  page.on('console',m=>{if(m.type()==='error')diagnostics.push(`console: ${m.text()}`)});
   await page.goto(base,{waitUntil:'domcontentloaded'});
   await page.locator('#file').setInputFiles(resolve(fixture));
   await page.waitForFunction(expected=>document.querySelector('#count')?.textContent.includes(expected),count,{timeout:30000});
@@ -23,6 +22,7 @@ async function pageFor(fixture,count){
 }
 function assert(ok,msg){if(!ok)throw Error(msg)}
 async function hudInside(page,sel){return page.evaluate(sel=>{const e=document.querySelector(sel),r=e?.getBoundingClientRect();return Boolean(e&&!e.hidden&&r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight);},sel)}
+async function closeDimensions(page){await page.locator('#ggDimensionHud .gg-hud-close').click();await page.waitForFunction(()=>document.querySelector('#ggDimensionHud')?.hidden===true)}
 
 try{
   // Viga armada: cotas + corte + posições 20/50/80.
@@ -33,7 +33,7 @@ try{
   const dims=await page.locator('#ggDimensionHudValues').innerText();
   assert(/B: 20,0 cm/.test(dims)&&/H: 40,0 cm/.test(dims)&&/L: 500,0 cm/.test(dims),'Cotas da viga não apareceram no HUD');
   assert(await hudInside(page,'#ggDimensionHud'),'HUD de cotas saiu da tela mobile');
-  await page.locator('#hideDimensions').click();
+  await closeDimensions(page);
   await page.getByRole('button',{name:/Ver corte transversal/i}).click();
   await page.waitForFunction(()=>!document.querySelector('#ggSectionHud')?.hidden);
   for(const pos of [20,50,80]){
@@ -45,6 +45,8 @@ try{
     assert(state.info?.bars?.includes('Ø 12 mm'),'Ø12 não apareceu no corte');
     assert(state.rebarCallouts===2,'Chamadas de armadura inesperadas');
   }
+  const beamCut=await page.locator('#ggSectionHudValues').innerText();
+  assert(/B: 20,0 cm/.test(beamCut)&&/H: 40,0 cm/.test(beamCut)&&/Peça: 500,0 cm/.test(beamCut),'Cotas semânticas do corte da viga incorretas');
   assert(await hudInside(page,'#ggSectionHud'),'HUD de corte saiu da tela mobile');
   const beamViewport=await page.locator('#viewport').boundingBox();
   assert(beamViewport?.height>=620,'Área 3D insuficiente no corte mobile');
@@ -57,8 +59,8 @@ try{
   assert(await cut.isEnabled(),'Corte geométrico do pilar ficou desabilitado');
   await cut.click();
   await page.waitForFunction(()=>window.GG_VIEWER_API.getSectionDebug().active);
-  const pillar=await page.evaluate(()=>window.GG_VIEWER_API.getSectionDebug().info);
-  assert(pillar?.width==='30,0 cm'&&pillar?.height==='40,0 cm'&&pillar?.pieceLength==='300,0 cm','Corte do pilar com dimensões incorretas');
+  const pillarHud=await page.locator('#ggSectionHudValues').innerText();
+  assert(/B: 30,0 cm/.test(pillarHud)&&/H: 40,0 cm/.test(pillarHud)&&/Peça: 300,0 cm/.test(pillarHud),'Corte do pilar com B/H/L incorretos');
   assert(await hudInside(page,'#ggSectionHud'),'HUD do pilar saiu da tela mobile');
   await page.close();
 
@@ -70,14 +72,16 @@ try{
   const slabDims=await page.locator('#ggDimensionHudValues').innerText();
   assert(/L: 600,0 cm/.test(slabDims)&&/B: 600,0 cm/.test(slabDims)&&/Esp.: 20,0 cm/.test(slabDims),'Cotas da laje incorretas');
   assert(await hudInside(page,'#ggDimensionHud'),'HUD da laje saiu da tela mobile');
-  await page.locator('#hideDimensions').click();
+  await closeDimensions(page);
   await page.getByRole('button',{name:'Ver corte transversal'}).click();
   await page.waitForFunction(()=>window.GG_VIEWER_API.getSectionDebug().active);
+  const slabCut=await page.locator('#ggSectionHudValues').innerText();
+  assert(/Esp.: 20,0 cm/.test(slabCut)&&/Larg.: 600,0 cm/.test(slabCut),'Corte da laje não identificou largura/espessura');
   assert(await hudInside(page,'#ggSectionHud'),'HUD de corte da laje saiu da tela mobile');
   await page.close();
 
   if(diagnostics.length)throw Error(diagnostics.join('\n'));
-  console.log('R34 MOBILE CUTS OK: viga, pilar, laje, cotas e 20/50/80%.');
+  console.log('R35 MOBILE CUTS OK: viga, pilar, laje, B/H/Esp. e 20/50/80%.');
 }finally{
   await browser.close();
   await new Promise(r=>server.close(r));
