@@ -1,0 +1,52 @@
+name: Patch R35 semantic dimensions
+
+on:
+  push:
+    paths:
+      - 'scripts/patch-r35-semantics.py'
+      - '.github/workflows/patch-r35-semantics.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply R35 semantic patch
+        run: python scripts/patch-r35-semantics.py
+      - name: Validate generated files
+        run: |
+          node --check dist/app.js
+          node --check dist/technical-hud-r34.js
+          python - <<'PY'
+          from pathlib import Path
+          app=Path('dist/app.js').read_text(encoding='utf-8')
+          hud=Path('dist/technical-hud-r34.js').read_text(encoding='utf-8')
+          checks={
+            'vertical slab thickness':'const minValue=Math.min(...data.values)' in app,
+            'section semantic labels':"widthLabel:uLabel,heightLabel:vLabel" in app,
+            'column B/H':"/IFCCOLUMN|IFCPILE/.test(hostType)" in app,
+            'slab section labels':"uLabel='Esp.'" in app and "vLabel='Esp.'" in app,
+            'HUD labels':"info.widthLabel||'B'" in hud,
+          }
+          bad=[k for k,v in checks.items() if not v]
+          if bad: raise SystemExit('Missing R35 checks: '+', '.join(bad))
+          print('R35 semantic validation OK:', ', '.join(checks))
+          PY
+      - name: Commit generated files
+        run: |
+          if git diff --quiet -- dist/app.js dist/technical-hud-r34.js; then
+            echo 'No generated changes to commit.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add dist/app.js dist/technical-hud-r34.js
+          git commit -m 'R35: fix semantic B H and slab thickness'
+          git push
