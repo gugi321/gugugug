@@ -19,13 +19,15 @@ const container = $('cad-container') as HTMLElement
 const input = $('fileInput') as HTMLInputElement
 const statusEl = $('status') as HTMLElement
 const workerStatus = $('workerStatus') as HTMLElement
+const snapStatus = $('snapStatus') as HTMLElement
+const commandInput = $('commandInput') as HTMLInputElement
 const empty = $('emptyState') as HTMLElement
 const busy = $('busy') as HTMLElement
 const busyText = $('busyText') as HTMLElement
 const diagnostics = $('diagnostics') as HTMLElement
 const errorDetails = $('errorDetails') as HTMLElement
 
-const CAD_BUILD = '2026-10-16-eng-gustavo-g-r10.2'
+const CAD_BUILD = '2026-10-18-eng-gustavo-g-r13.1'
 const CAD_DATA_BASE = 'https://cdn.jsdelivr.net/gh/mlightcad/cad-data@be0a4956038c05acdd664266e8c803ac04f0ac77/'
 const workerUrls = {
   dwgParser: new URL('./assets/libredwg-parser-worker.js', document.baseURI).href
@@ -37,10 +39,12 @@ let initializing: Promise<boolean> | null = null
 let hasDocument = false
 let workersReady = false
 let toolbarReady = false
+let osnapEnabled = true
+let orthoEnabled = false
 
 function postParent(type: string, detail: Record<string, unknown> = {}) {
   if (window.parent === window) return
-  window.parent.postMessage({ type, build: CAD_BUILD, ...detail }, window.location.origin)
+  window.parent.postMessage({ type, build: CAD_BUILD, ...detail }, '*')
 }
 
 function setStatus(message: string, isError = false) {
@@ -51,13 +55,19 @@ function setStatus(message: string, isError = false) {
 function setBusy(on: boolean, message = 'Carregando desenho…') {
   busy.hidden = !on
   busyText.textContent = message
+  busy.setAttribute('aria-hidden', String(!on))
 }
 
 function setTools(enabled: boolean) {
-  for (const id of ['fitView', 'layers', 'measureDistance', 'measureArea', 'clearMeasurements']) {
+  for (const id of [
+    'selectTool', 'panTool', 'fitView', 'layers', 'measureDistance', 'measureArea',
+    'lineTool', 'circleTool', 'eraseTool', 'undoTool', 'redoTool',
+    'osnapToggle', 'orthoToggle', 'clearMeasurements'
+  ]) {
     const el = $(id) as HTMLButtonElement | null
     if (el) el.disabled = !enabled
   }
+  if (commandInput) commandInput.disabled = !enabled
 }
 
 function showErrorDetail(message: string) {
@@ -107,7 +117,7 @@ async function runDiagnostics() {
   ])
   checks.push({ label: 'Worker DWG', ...dwgWorker })
   checks.push({ label: 'LibreDWG WASM', ...wasm })
-  checks.push({ label: 'Texto CAD', ok: true, detail: 'renderização principal · menor consumo de memória' })
+  checks.push({ label: 'OSNAP', ok: true, detail: 'Final + Meio + Centro' })
 
   diagnostics.innerHTML = checks
     .map(c => `<span class="diag ${c.ok ? 'ok' : 'bad'}"><b>${c.label}</b><em>${c.ok ? 'OK' : 'Falha'}</em><small>${c.detail}</small></span>`)
@@ -143,6 +153,57 @@ function registerDwgConverter() {
   AcDbDatabaseConverterManager.instance.register(AcDbFileType.DWG, converter)
 }
 
+function updateAidUi() {
+  const osnap = $('osnapToggle') as HTMLButtonElement | null
+  const ortho = $('orthoToggle') as HTMLButtonElement | null
+  if (osnap) {
+    osnap.textContent = osnapEnabled ? 'OSNAP ON' : 'OSNAP OFF'
+    osnap.classList.toggle('active', osnapEnabled)
+    osnap.setAttribute('aria-pressed', String(osnapEnabled))
+  }
+  if (ortho) {
+    ortho.textContent = orthoEnabled ? 'ORTHO ON' : 'ORTHO OFF'
+    ortho.classList.toggle('active', orthoEnabled)
+    ortho.setAttribute('aria-pressed', String(orthoEnabled))
+  }
+  if (snapStatus) snapStatus.textContent = osnapEnabled
+    ? `OSNAP: Final + Meio + Centro${orthoEnabled ? ' · ORTHO' : ''}`
+    : `OSNAP: OFF${orthoEnabled ? ' · ORTHO' : ''}`
+}
+
+function rawCommand(command: string) {
+  if (!initialized || !hasDocument) return
+  try {
+    AcApDocManager.instance.sendStringToExecute(command)
+  } catch (error) {
+    const message = classifyError(error)
+    setStatus(message, true)
+    showErrorDetail(String((error as any)?.stack || error))
+  }
+}
+
+function applyCadAids() {
+  if (!hasDocument) return
+  rawCommand('PICKBOX\n20')
+  rawCommand(`OSMODE\n${osnapEnabled ? 7 : 0}`)
+  rawCommand(`ORTHOMODE\n${orthoEnabled ? 1 : 0}`)
+  updateAidUi()
+}
+
+function toggleOsnap() {
+  osnapEnabled = !osnapEnabled
+  if (hasDocument) rawCommand(`OSMODE\n${osnapEnabled ? 7 : 0}`)
+  updateAidUi()
+  setStatus(osnapEnabled ? 'OSNAP ligado: ponto final, meio e centro.' : 'OSNAP desligado.')
+}
+
+function toggleOrtho() {
+  orthoEnabled = !orthoEnabled
+  if (hasDocument) rawCommand(`ORTHOMODE\n${orthoEnabled ? 1 : 0}`)
+  updateAidUi()
+  setStatus(orthoEnabled ? 'ORTHO ligado: movimento horizontal/vertical.' : 'ORTHO desligado.')
+}
+
 async function ensureViewer(): Promise<boolean> {
   if (initialized) return true
   if (initializing) return initializing
@@ -150,9 +211,9 @@ async function ensureViewer(): Promise<boolean> {
   initializing = (async () => {
     try {
       showErrorDetail('')
-      setBusy(true, 'Inicializando o Mini CAD online…')
+      setBusy(true, 'Inicializando o Mini CAD…')
       setStatus('Preparando o visualizador DWG / DXF…')
-      acedApplyUiTheme('light', host)
+      acedApplyUiTheme('dark', host)
 
       registerDwgConverter()
 
@@ -280,7 +341,9 @@ async function openDrawing(file?: File) {
     hasDocument = true
     empty.hidden = true
     setTools(true)
-    setStatus(`${file.name} aberto. Use Camadas, Distância ou Área para revisar o desenho.`)
+    applyCadAids()
+    rawCommand('zoom\nall')
+    setStatus(`${file.name} aberto. OSNAP ativo: Final + Meio + Centro.`)
     postParent('GG_CAD_DOCUMENT_OPENED', { name: file.name, size: file.size })
   } catch (error: any) {
     console.error(error)
@@ -291,36 +354,95 @@ async function openDrawing(file?: File) {
     postParent('GG_CAD_ERROR', { stage: 'open', message, file: file.name })
   } finally {
     setBusy(false)
+    requestAnimationFrame(() => setBusy(false))
+    setTimeout(() => setBusy(false), 120)
     input.value = ''
   }
 }
 
-function execute(command: string) {
+function execute(command: string, label?: string) {
   if (!initialized || !hasDocument) return
-  try {
-    AcApDocManager.instance.sendStringToExecute(command)
-  } catch (error) {
-    const message = classifyError(error)
-    setStatus(message, true)
-    showErrorDetail(String((error as any)?.stack || error))
-  }
+  rawCommand(command)
+  if (label) setStatus(label)
 }
 
 function chooseFile() {
   input.click()
 }
 
+const COMMANDS: Record<string, { command?: string; action?: () => void; label: string }> = {
+  L: { command: 'line', label: 'LINHA: indique o primeiro ponto.' },
+  LINE: { command: 'line', label: 'LINHA: indique o primeiro ponto.' },
+  C: { command: 'circle', label: 'CÍRCULO: indique o centro.' },
+  CIRCLE: { command: 'circle', label: 'CÍRCULO: indique o centro.' },
+  Z: { command: 'zoom', label: 'ZOOM ativo.' },
+  ZE: { command: 'zoom\nall', label: 'Zoom Extents aplicado.' },
+  LA: { command: 'layer', label: 'Gerenciador de camadas.' },
+  LAYER: { command: 'layer', label: 'Gerenciador de camadas.' },
+  DI: { command: 'measuredistance', label: 'DISTÂNCIA: escolha dois pontos.' },
+  DIST: { command: 'measuredistance', label: 'DISTÂNCIA: escolha dois pontos.' },
+  AREA: { command: 'measurearea', label: 'ÁREA: marque o contorno.' },
+  E: { command: 'erase', label: 'APAGAR: selecione os objetos.' },
+  ERASE: { command: 'erase', label: 'APAGAR: selecione os objetos.' },
+  U: { command: 'undo', label: 'Desfazer.' },
+  UNDO: { command: 'undo', label: 'Desfazer.' },
+  REDO: { command: 'redo', label: 'Refazer.' },
+  OSNAP: { action: toggleOsnap, label: 'Alternar OSNAP.' },
+  ORTHO: { action: toggleOrtho, label: 'Alternar ORTHO.' }
+}
+
+function runTypedCommand() {
+  const value = commandInput.value.trim().toUpperCase()
+  commandInput.value = ''
+  if (!value) return
+  const item = COMMANDS[value]
+  if (!item) {
+    setStatus(`Comando “${value}” não cadastrado. Use L, C, ZE, LA, DI, AREA, E, U, REDO, OSNAP ou ORTHO.`, true)
+    return
+  }
+  if (item.action) item.action()
+  else if (item.command) execute(item.command, item.label)
+}
+
 $('openFile')?.addEventListener('click', chooseFile)
 $('openFileCenter')?.addEventListener('click', chooseFile)
 input.addEventListener('change', () => openDrawing(input.files?.[0]))
-$('fitView')?.addEventListener('click', () => execute('zoom\nall'))
-$('layers')?.addEventListener('click', () => execute('layer'))
-$('measureDistance')?.addEventListener('click', () => execute('measuredistance'))
-$('measureArea')?.addEventListener('click', () => execute('measurearea'))
-$('clearMeasurements')?.addEventListener('click', () => execute('clearmeasurements'))
+$('selectTool')?.addEventListener('click', () => execute('select', 'Selecionar: clique em uma entidade.'))
+$('panTool')?.addEventListener('click', () => execute('pan', 'Pan ativo.'))
+$('fitView')?.addEventListener('click', () => execute('zoom\nall', 'Zoom Extents aplicado.'))
+$('layers')?.addEventListener('click', () => execute('layer', 'Gerenciador de camadas.'))
+$('measureDistance')?.addEventListener('click', () => execute('measuredistance', 'Distância: escolha dois pontos com OSNAP.'))
+$('measureArea')?.addEventListener('click', () => execute('measurearea', 'Área: marque o contorno.'))
+$('lineTool')?.addEventListener('click', () => execute('line', 'Linha: indique o primeiro ponto.'))
+$('circleTool')?.addEventListener('click', () => execute('circle', 'Círculo: indique o centro.'))
+$('eraseTool')?.addEventListener('click', () => execute('erase', 'Apagar: selecione os objetos.'))
+$('undoTool')?.addEventListener('click', () => execute('undo', 'Desfazer.'))
+$('redoTool')?.addEventListener('click', () => execute('redo', 'Refazer.'))
+$('osnapToggle')?.addEventListener('click', toggleOsnap)
+$('orthoToggle')?.addEventListener('click', toggleOrtho)
+$('clearMeasurements')?.addEventListener('click', () => execute('clearmeasurements', 'Medições removidas.'))
 $('rerunDiagnostics')?.addEventListener('click', () => void runDiagnostics())
 $('toggleErrorDetails')?.addEventListener('click', () => {
   errorDetails.hidden = !errorDetails.hidden
+})
+commandInput?.addEventListener('keydown', event => {
+  if (event.key === 'Enter') {
+    event.preventDefault()
+    runTypedCommand()
+  } else if (event.key === 'Escape') {
+    commandInput.value = ''
+    commandInput.blur()
+  }
+})
+
+document.addEventListener('keydown', event => {
+  if (event.key === 'F3') {
+    event.preventDefault()
+    toggleOsnap()
+  } else if (event.key === 'F8') {
+    event.preventDefault()
+    toggleOrtho()
+  }
 })
 
 for (const eventName of ['dragenter', 'dragover']) {
@@ -352,7 +474,10 @@ window.addEventListener('unhandledrejection', event => {
 })
 
 setTools(false)
+updateAidUi()
+setBusy(false)
 setStatus('Verificando o Mini CAD online…')
 void runDiagnostics().finally(() => {
+  setBusy(false)
   postParent('GG_CAD_BOOTED', { build: CAD_BUILD })
 })
