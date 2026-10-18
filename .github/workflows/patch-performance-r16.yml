@@ -28,12 +28,11 @@ jobs:
           p=Path('scripts/patch-performance-r16.py')
           t=p.read_text(encoding='utf-8')
           t=t.replace('    " camera.up.copy(f.v);camera.position.copy(center)', '    "camera.up.copy(f.v);camera.position.copy(center)')
-          t=t.replace('    " camera.up.copy(f.v);camera.position.copy(center)', '    "camera.up.copy(f.v);camera.position.copy(center)')
           p.write_text(t,encoding='utf-8')
           PY
       - name: Apply R16 patch
         run: python scripts/patch-performance-r16.py
-      - name: Validate JavaScript and performance guards
+      - name: Validate JavaScript
         shell: bash
         run: |
           node --check dist/app.js
@@ -41,14 +40,39 @@ jobs:
           node --check dist/dimensions-r9.js
           node --check dist/github-pages.js
           node --check dist/sw.js
-          grep -q "preserveDrawingBuffer:false" dist/app.js
-          ! grep -q "setAnimationLoop" dist/app.js
-          grep -q "input\[type=\\\"file\\\"\]" dist/app.js
-          ! grep -q "loading=\"eager\"" dist/dwg.js
-          ! grep -q "import('./quantities.js').catch" dist/dwg.js
-          ! grep -q "import './eng-r10.js'" dist/dimensions-r9.js
-          grep -q "eng-gustavo-g-r16" dist/sw.js
-          grep -q "R16 leve" dist/index.html
+      - name: Validate R16 performance guards
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          app=Path('dist/app.js').read_text(encoding='utf-8')
+          dwg=Path('dist/dwg.js').read_text(encoding='utf-8')
+          dim=Path('dist/dimensions-r9.js').read_text(encoding='utf-8')
+          gp=Path('dist/github-pages.js').read_text(encoding='utf-8')
+          sw=Path('dist/sw.js').read_text(encoding='utf-8')
+          html=Path('dist/index.html').read_text(encoding='utf-8')
+          css=Path('dist/ui-polish-r15.css').read_text(encoding='utf-8')
+          checks={
+            'preserveDrawingBuffer disabled':'preserveDrawingBuffer:false' in app,
+            'continuous animation loop removed':'setAnimationLoop' not in app,
+            'file input kept hidden':"input[type=\\\"file\\\"]" in app or "input[type=\"file\"]" in app,
+            'section contour debounce enabled':'sectionContourTimer' in app,
+            'section context host only':"m.userData.id===s.hostID" in app,
+            'discipline cache enabled':'ggDisciplineCache' in app,
+            'CAD iframe not eager':'loading="eager"' not in dwg,
+            'CAD iframe starts without src':'id="cadFrame" title=' in dwg,
+            'quantities not eagerly imported':"import('./quantities.js').catch" not in dwg,
+            'tools not eagerly imported by dimensions':"import './eng-r10.js'" not in dim,
+            'tools not eagerly imported by pages bootstrap':"import('./eng-r10.js').catch" not in gp,
+            'service worker R16 cache':'eng-gustavo-g-r16' in sw,
+            'heavy tools absent from SW core':"'./eng-r10.js'" not in sw and "'./dwg.js'" not in sw,
+            'compact overlay override':'max-width:min(330px' in css,
+            'R16 build label':'R16 leve' in html,
+          }
+          failed=[name for name,ok in checks.items() if not ok]
+          for name,ok in checks.items(): print(('OK  ' if ok else 'FAIL')+name)
+          if failed: raise SystemExit('R16 guard failures: '+', '.join(failed))
+          PY
       - name: Commit generated files
         shell: bash
         run: |
