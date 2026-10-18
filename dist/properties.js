@@ -157,7 +157,7 @@ export function createInspector(api, W, modelID) {
       const names=rows.filter(r=>!unresolvedSteel&&r.key==='StoreyName').map(r=>r.value),elevations=rows.filter(r=>!unresolvedSteel&&r.key==='Elevation').map(r=>r.value);
       field('Nível do elemento',names.length||elevations.length?[{value:[...names,...elevations].join(' · ')}]:[],{note:'Pavimento de referência; não é a cota da face do elemento.'});
     }
-    const reinforcement=[];
+    const reinforcement=[],reinforcementBars=[];
     function barRows(barID){
       const bar=line(barID),out=[],start=rows.length,prior=visited;visited=new Set();
       objectProperties(barID,'Barra · ');
@@ -177,8 +177,9 @@ export function createInspector(api, W, modelID) {
     }
     const grouped=new Map(['Armadura superior','Armadura inferior','Estribos · transversal','Armadura de pele','Longitudinal sem posição definida','Sem classificação no IFC'].map(k=>[k,[]]));
     for(const bar of unresolvedSteel?[{id}]:linked.length?linked:namedBars.map(id=>({id}))){
-      const b=line(bar.id),description=[name(b.Name),name(b.ObjectType),name(b.PredefinedType)].join(' ');
-      for(const row of barRows(bar.id))grouped.get(role(description+' '+(row.roleText||''))).push(row);
+      const b=line(bar.id),description=[name(b.Name),name(b.ObjectType),name(b.PredefinedType)].join(' '),rowsForBar=barRows(bar.id),roles=new Set();
+      for(const row of rowsForBar){const classified=role(description+' '+(row.roleText||''));roles.add(classified);grouped.get(classified).push(row);}
+      reinforcementBars.push({id:bar.id,name:name(b.Name),role:[...roles].join(' / ')||role(description),diameters:[...new Set(rowsForBar.map(r=>r.value).filter(Boolean))]});
     }
     // Read explicit reinforcement diameter properties on the host, never its dimensions.
     if(!unresolvedSteel)for(const row of rows)if(/diameter|diametro|bitola/.test(key(row))){grouped.get(role(row.group+' '+row.key)).push(row);}
@@ -193,7 +194,7 @@ export function createInspector(api, W, modelID) {
       }
     }
     if(type==='IFCSLAB')for(const f of fields)if(f[2].missing&&/EPS|Treliça/.test(f[0])){f[1]='Não consta nas propriedades deste IFC';f[2].note='O tipo de laje, por si só, não informa as dimensões do EPS nem o modelo da treliça.';}
-    return {id,name:name(element.Name)||'Elemento IFC',type,fields,reinforcement,linked,sectionCandidates:[...new Set([...linked.map(b=>b.id),...namedBars])],barAssociation,units,clickedID,unresolvedSteel};
+    return {id,name:name(element.Name)||'Elemento IFC',type,fields,reinforcement,reinforcementBars,linked,sectionCandidates:[...new Set([...linked.map(b=>b.id),...namedBars])],barAssociation,units,clickedID,unresolvedSteel};
   }
   function catalog(){
     const floors=all('IFCBUILDINGSTOREY').map(id=>({id,name:name(line(id)?.Name)||'Pavimento #'+id}));
