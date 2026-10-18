@@ -65,4 +65,12 @@ if old_select in app:
     app=app.replace(old_select,new_select,1)
 elif 'elementInfo=ggAugmentRebarGeometry(propertyCache.get(mesh.userData.id))' not in app:
     raise SystemExit('selection property assignment not found')
+
+# Diameter callouts follow the full visible section band, not only the center plane.
+old_band="if(s.at<min-.01||s.at>max+.01)continue;const p=bb.getCenter(new T.Vector3());p.addScaledVector(f.n,s.at-p.dot(f.n));callouts.push({id,p,text:'Ø '+b.diameters.join(' / '),role:b.role||''});"
+new_band="const halfBand=Math.max(0,Number($('sectionThickness').value)||0)/2;if(s.at<min-halfBand-.01||s.at>max+halfBand+.01)continue;const p=bb.getCenter(new T.Vector3()),spanN=max-min;if(spanN>Math.max(halfBand*1.5,.05))p.addScaledVector(f.n,s.at-p.dot(f.n));callouts.push({id,p,text:'Ø '+b.diameters.join(' / '),role:b.role||''});"
+if old_band in app:
+    app=app.replace(old_band,new_band,1)
+elif 'const halfBand=Math.max(0,Number($(\'sectionThickness\').value)||0)/2' not in app:
+    raise SystemExit('section callout band condition not found')
 app_path.write_text(app,encoding='utf-8')
