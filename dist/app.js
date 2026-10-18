@@ -3,7 +3,7 @@ const $=id=>document.getElementById(id);
 const PUBLIC_VIEWER_ORIGIN='https://eng-gustavo-g.hatchable.site';
 const urlParams=new URLSearchParams(location.search),sharedId=urlParams.get('share'),embedded=$('embeddedIFC'),sharedMode=Boolean(sharedId||embedded);
 let readOnlyMode=Boolean(embedded),trustedReadOnlyLoad=false,sharePermission=embedded?'view':'edit';
-let T,Orbit,api,scene,camera,renderer,controls,model,box,grid,busy=false,axis='z',sign=1,selected=null;let W,apiReady=false,currentModelID=null,inspector=null,currentFile=null,propertyWindow=null,selectionRevision=0,isolatedID=null,transition=null;const hiddenIDs=new Set();let elementInfo=null;const propertyCache=new Map();const categories=new Map();let meshes=[];
+let T,Orbit,api,scene,camera,renderer,controls,model,box,grid,busy=false,axis='z',sign=1,selected=null;let W,apiReady=false,currentModelID=null,inspector=null,currentFile=null,propertyWindow=null,selectionRevision=0,isolatedID=null,transition=null;const hiddenIDs=new Set();let elementInfo=null;const propertyCache=new Map();const categories=new Map();const ggDisciplineCache=new Map();let meshes=[];let ggRenderQueued=0,ggTransitionRAF=0;
 const mobileLayout=()=>Boolean(window.matchMedia?.('(max-width:760px)').matches);
 function setMobileInspectorExpanded(expanded){const panel=$('selection'),toggle=$('mobileInspectorToggle');if(!panel)return;panel.classList.toggle('mobile-expanded',Boolean(expanded));if(toggle){toggle.setAttribute('aria-expanded',String(Boolean(expanded)));toggle.textContent=expanded?'Menos':'Dados';}}
 const status=(message)=>{$('status').textContent=message;$('status').hidden=!message};
@@ -15,8 +15,10 @@ function applyAccessUI(){
  document.body.classList.toggle('owner-ready',!readOnlyMode);
  document.body.classList.remove('locked');
  for(const el of document.querySelectorAll(editControls)){
+  const fileInput=el.matches?.('input[type=\"file\"]');
   if(readOnlyMode){el.hidden=true;el.disabled=true;}
-  else if(el.id!=='pdfDownload'){el.hidden=false;}
+  else if(fileInput){el.hidden=true;el.disabled=false;}
+  else if(el.id!=='pdfDownload'){el.hidden=false;el.disabled=false;}
  }
  if($('ownerAccount'))$('ownerAccount').hidden=true;
  if($('ownerLogout'))$('ownerLogout').hidden=true;
@@ -31,7 +33,10 @@ async function initAccess(){
 if($('brandEnter'))$('brandEnter').onclick=hideBrandIntro;
 applyAccessUI();
 const isSteel=t=>/IFCREINFORCING|IFCTENDON/.test(t);
-async function init(){if(renderer)return;status('Preparando o visualizador 3D…');[T,{OrbitControls:Orbit}]=await Promise.all([import('three'),import('three/addons/controls/OrbitControls.js')]);scene=new T.Scene();camera=new T.PerspectiveCamera(45,1,.01,100000);camera.up.set(0,0,1);renderer=new T.WebGLRenderer({antialias:!mobileLayout(),alpha:true,preserveDrawingBuffer:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,mobileLayout()?1.1:1.5));renderer.localClippingEnabled=true;$('canvas').append(renderer.domElement);controls=new Orbit(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.12;controls.zoomSpeed=.8;controls.rotateSpeed=.7;controls.screenSpacePanning=true;controls.touches.ONE=T.TOUCH.ROTATE;controls.touches.TWO=T.TOUCH.DOLLY_PAN;controls.addEventListener("start",()=>{transition=null});renderer.domElement.tabIndex=0;scene.add(new T.HemisphereLight(0xffffff,0x8996a5,2));const light=new T.DirectionalLight(0xffffff,2.3);light.position.set(20,-30,50);scene.add(light);new ResizeObserver(()=>{const w=$('canvas').clientWidth,h=$('canvas').clientHeight;if(!w||!h)return;renderer.setSize(w,h);resizeCamera(w/h);camera.updateProjectionMatrix()}).observe($('canvas'));let ggLastFrame=0;renderer.setAnimationLoop((now=0)=>{if(document.hidden)return;const interval=mobileLayout()?33:16;if(!transition&&now-ggLastFrame<interval)return;ggLastFrame=now;if(transition){camera.position.lerp(transition.position,.16);controls.target.lerp(transition.target,.16);if(camera.position.distanceTo(transition.position)<transition.distance*.001){camera.position.copy(transition.position);controls.target.copy(transition.target);transition=null}}controls.update();renderer.render(scene,camera)});let down;renderer.domElement.addEventListener('pointerdown',e=>{down=[e.clientX,e.clientY]});renderer.domElement.addEventListener('pointerup',e=>{if(!down||Math.hypot(e.clientX-down[0],e.clientY-down[1])>5)return;const r=renderer.domElement.getBoundingClientRect(),ray=new T.Raycaster();ray.setFromCamera(new T.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),camera);const hit=ray.intersectObjects(meshes,false).find(h=>h.object.isMesh&&h.object.userData.id!==undefined&&h.object.visible&&h.object.material.opacity>.02&&(!h.object.material.clippingPlanes.length||h.object.material.clippingPlanes.every(p=>p.distanceToPoint(h.point)>=0)));select(hit?.object)});renderer.domElement.addEventListener("dblclick",()=>{if(selected)focusSelected()});}
+function ggRenderNow(){if(renderer&&!document.hidden)renderer.render(scene,camera)}
+function ggScheduleRender(){if(!renderer||document.hidden||ggRenderQueued)return;ggRenderQueued=requestAnimationFrame(()=>{ggRenderQueued=0;ggRenderNow()})}
+function ggRunTransition(){if(!renderer||!transition||ggTransitionRAF)return;const step=()=>{ggTransitionRAF=0;if(!renderer||!transition){ggScheduleRender();return}camera.position.lerp(transition.position,.2);controls.target.lerp(transition.target,.2);if(camera.position.distanceTo(transition.position)<Math.max(transition.distance*.001,.0001)){camera.position.copy(transition.position);controls.target.copy(transition.target);transition=null}controls.update();ggRenderNow();if(transition)ggTransitionRAF=requestAnimationFrame(step)};ggTransitionRAF=requestAnimationFrame(step)}
+async function init(){if(renderer)return;status('Preparando o visualizador 3D…');[T,{OrbitControls:Orbit}]=await Promise.all([import('three'),import('three/addons/controls/OrbitControls.js')]);scene=new T.Scene();camera=new T.PerspectiveCamera(45,1,.01,100000);camera.up.set(0,0,1);renderer=new T.WebGLRenderer({antialias:false,alpha:true,preserveDrawingBuffer:false,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,mobileLayout()?1:1.25));renderer.localClippingEnabled=true;$('canvas').append(renderer.domElement);controls=new Orbit(camera,renderer.domElement);controls.enableDamping=false;controls.zoomSpeed=.8;controls.rotateSpeed=.7;controls.screenSpacePanning=true;controls.touches.ONE=T.TOUCH.ROTATE;controls.touches.TWO=T.TOUCH.DOLLY_PAN;controls.addEventListener("start",()=>{transition=null;if(ggTransitionRAF){cancelAnimationFrame(ggTransitionRAF);ggTransitionRAF=0}});controls.addEventListener("change",ggScheduleRender);renderer.domElement.tabIndex=0;scene.add(new T.HemisphereLight(0xffffff,0x8996a5,2));const light=new T.DirectionalLight(0xffffff,2.3);light.position.set(20,-30,50);scene.add(light);new ResizeObserver(()=>{const w=$('canvas').clientWidth,h=$('canvas').clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);resizeCamera(w/h);camera.updateProjectionMatrix();ggScheduleRender()}).observe($('canvas'));let down;renderer.domElement.addEventListener('pointerdown',e=>{down=[e.clientX,e.clientY]});renderer.domElement.addEventListener('pointerup',e=>{if(!down||Math.hypot(e.clientX-down[0],e.clientY-down[1])>5)return;const r=renderer.domElement.getBoundingClientRect(),ray=new T.Raycaster();ray.setFromCamera(new T.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),camera);const hit=ray.intersectObjects(meshes,false).find(h=>h.object.isMesh&&h.object.userData.id!==undefined&&h.object.visible&&h.object.material.opacity>.02&&(!h.object.material.clippingPlanes.length||h.object.material.clippingPlanes.every(p=>p.distanceToPoint(h.point)>=0)));select(hit?.object)});renderer.domElement.addEventListener("dblclick",()=>{if(selected)focusSelected()});}
 function ggAugmentRebarGeometry(info){
  if(!info||info.unresolvedSteel||!inspector||!T||!/IFCBEAM|IFCCOLUMN|IFCSLAB|IFCWALL|IFCFOOTING|IFCPILE|IFCMEMBER|IFCPLATE/.test(String(info.type||'')))return info;
  const hosts=meshes.filter(m=>m.userData.id===info.id);if(!hosts.length)return info;
@@ -55,7 +60,7 @@ async function select(mesh){
   if(dimensionData&&dimensionData.hostID!==mesh?.userData.id)clearDimensions();
   selected=mesh||null;elementInfo=null;$('selection').hidden=!mesh;if(mobileLayout())setMobileInspectorExpanded(false);
   if(!mesh){$('selectionStatus').textContent='Clique em um elemento para inspecionar';if(propertyWindow&&!propertyWindow.closed)propertyWindow.document.body.textContent='Nenhum elemento selecionado.';return;}
-  for(const m of meshes)if(m.userData.id===mesh.userData.id)m.material.emissive.setHex(mobileLayout()?0x8a4c2d:0x635035);
+  for(const m of meshes)if(m.userData.id===mesh.userData.id)m.material.emissive.setHex(mobileLayout()?0x8a4c2d:0x635035);ggScheduleRender();
   $('elementName').textContent=mesh.userData.name||'Elemento IFC';$('elementType').textContent=(labels[mesh.userData.type]||mesh.userData.type)+' · #'+mesh.userData.id;
   $('selectionStatus').textContent='Selecionado: #'+mesh.userData.id;$('propertyBody').textContent='Lendo propriedades do IFC…';
   await new Promise(r=>setTimeout(r,25));if(revision!==selectionRevision)return;
@@ -70,19 +75,19 @@ function fit(view='iso',targetBox=null,animate=true){
  const aspect=$('canvas').clientWidth/$('canvas').clientHeight,distance=d*1.65/Math.min(aspect,1),position=c.clone().addScaledVector(v,distance);
  camera.near=Math.max(d/10000,.00001);camera.far=Math.max(distance+d*200,box.getSize(new T.Vector3()).length()*200);controls.maxDistance=camera.far*.7;
  if(camera.isOrthographicCamera){camera.userData.span=d*1.5/Math.min(aspect,1);camera.zoom=1;resizeCamera(aspect);}camera.updateProjectionMatrix();
- if(animate)transition={position,target:c,distance};else{transition=null;camera.position.copy(position);controls.target.copy(c);controls.update()}
+ if(animate){transition={position,target:c,distance};ggRunTransition()}else{transition=null;camera.position.copy(position);controls.target.copy(c);controls.update();ggScheduleRender()}
 }
-function update(){if(dimensionGroup){dimensionGroup.visible=!elementSection&&!$('cut').checked&&meshes.some(m=>m.userData.id===dimensionData.hostID&&m.visible);}document.body.classList.toggle('section-active',!!elementSection);if(!model)return;if(!elementSection)camera.up.set(0,0,1);if(elementSection)prepareSection();else if(sectionContours){dispose(sectionContours);sectionContours=null;}const opacity=1-Number($('opacity').value)/100;$('opacityValue').value=$('opacity').value+'%';$('cutValue').value=$('position').value+'%';const normal=new T.Vector3();normal[axis]=-sign;const coord=T.MathUtils.lerp(box.min[axis],box.max[axis],Number($('position').value)/100);const plane=new T.Plane(normal,sign*coord);for(const m of meshes){m.visible=categories.get(m.userData.type).visible&&!hiddenIDs.has(m.userData.id)&&(isolatedID===null||m.userData.id===isolatedID);const mat=m.material;mat.opacity=ggMaterialOpacity(m,isSteel(m.userData.type)?1:opacity);mat.transparent=mat.opacity<1;mat.depthWrite=mat.opacity>=1;mat.clippingPlanes=$('cut').checked?[plane]:[];if(elementSection){
+function update(options={}){if(dimensionGroup){dimensionGroup.visible=!elementSection&&!$('cut').checked&&meshes.some(m=>m.userData.id===dimensionData.hostID&&m.visible);}document.body.classList.toggle('section-active',!!elementSection);if(!model)return;if(!elementSection)camera.up.set(0,0,1);if(elementSection)prepareSection(options.sectionContours!==false);else if(sectionContours){dispose(sectionContours);sectionContours=null;}const opacity=1-Number($('opacity').value)/100;$('opacityValue').value=$('opacity').value+'%';$('cutValue').value=$('position').value+'%';const normal=new T.Vector3();normal[axis]=-sign;const coord=T.MathUtils.lerp(box.min[axis],box.max[axis],Number($('position').value)/100);const plane=new T.Plane(normal,sign*coord);for(const m of meshes){m.visible=categories.get(m.userData.type).visible&&!hiddenIDs.has(m.userData.id)&&(isolatedID===null||m.userData.id===isolatedID);const mat=m.material;mat.opacity=ggMaterialOpacity(m,isSteel(m.userData.type)?1:opacity);mat.transparent=mat.opacity<1;mat.depthWrite=mat.opacity>=1;mat.clippingPlanes=$('cut').checked?[plane]:[];if(elementSection){
  m.visible=elementSection.ids.has(m.userData.id);mat.opacity=1;mat.transparent=false;mat.depthWrite=true;
  mat.clippingPlanes=elementSection.planes||[];
  $('sectionValue').textContent=$('sectionPosition').value+'%';
- }mat.needsUpdate=true;for(const child of m.children){child.visible=$("edges").checked;child.material.clippingPlanes=mat.clippingPlanes}}if(grid)grid.visible=!elementSection&&$("showGrid").checked;const visible=new Set(meshes.filter(m=>m.visible).map(m=>m.userData.id)).size,total=new Set(meshes.map(m=>m.userData.id)).size;$('count').textContent=visible.toLocaleString('pt-BR')+' / '+total.toLocaleString('pt-BR')+' elementos visíveis'}
+ }const clipCount=mat.clippingPlanes?.length||0,newClipCount=(elementSection?elementSection.planes||[]:$('cut').checked?[plane]:[]).length,newTransparent=mat.opacity<1,newDepthWrite=mat.opacity>=1;if(mat.transparent!==newTransparent||mat.depthWrite!==newDepthWrite||clipCount!==newClipCount)mat.needsUpdate=true;mat.transparent=newTransparent;mat.depthWrite=newDepthWrite;for(const child of m.children){child.visible=$("edges").checked;child.material.clippingPlanes=mat.clippingPlanes}}if(grid)grid.visible=!elementSection&&$("showGrid").checked;const visible=new Set(meshes.filter(m=>m.visible).map(m=>m.userData.id)).size,total=new Set(meshes.map(m=>m.userData.id)).size;$('count').textContent=visible.toLocaleString('pt-BR')+' / '+total.toLocaleString('pt-BR')+' elementos visíveis';ggScheduleRender()}
 function layerUI(){$('layers').replaceChildren();for(const [type,cat] of [...categories].sort((a,b)=>Number(isSteel(b[0]))-Number(isSteel(a[0]))||a[0].localeCompare(b[0]))){if(!((labels[type]||type)+' '+type).toLowerCase().includes($('layerSearch').value.toLowerCase()))continue;const label=document.createElement('label');label.className='layer';const check=document.createElement('input');check.type='checkbox';check.checked=cat.visible;check.onchange=()=>{cat.visible=check.checked;update()};const name=document.createElement('span');name.textContent=labels[type]||type.replace(/^IFC/,'');const count=document.createElement('b');count.textContent=cat.ids.size;label.append(check,name,count);$('layers').append(label)}}
 async function load(file){if(readOnlyMode&&!trustedReadOnlyLoad){status('Este compartilhamento permite somente visualizar o modelo enviado.');return false}if(pdfUploading){status('Aguarde o envio dos PDFs antes de trocar o modelo.');return false}if(!file||busy)return false;if(!/\.ifc$/i.test(file.name)){status('Selecione um arquivo .ifc. Arquivos IFCZIP devem ser descompactados.');return}if(file.size>1024*1024*1024){status('O limite de abertura é 1 GB. Para modelos maiores, exporte por pavimento ou disciplina.');return false}busy=true;document.querySelectorAll('.open').forEach(b=>b.disabled=true);let id,newGroup;try{
  const header=await file.slice(0,4096).text();if(!header.includes('ISO-10303-21'))throw Error('O arquivo não contém um IFC STEP válido.');
  await init();
  if(file.size>100*1024*1024){
-  status('Modelo grande: liberando memória antes de carregar…');clearDimensions();select(null);dispose(model);dispose(grid);model=null;grid=null;box=null;meshes=[];categories.clear();propertyCache.clear();inspector=null;currentFile=null;elementSection=null;hiddenIDs.clear();isolatedID=null;clearHTMLExport();$('elementSection').hidden=true;
+  status('Modelo grande: liberando memória antes de carregar…');clearDimensions();select(null);dispose(model);dispose(grid);model=null;grid=null;box=null;meshes=[];categories.clear();propertyCache.clear();ggDisciplineCache.clear();inspector=null;currentFile=null;elementSection=null;hiddenIDs.clear();isolatedID=null;clearHTMLExport();$('elementSection').hidden=true;
   if(currentModelID!==null){api.CloseModel(currentModelID);currentModelID=null;}
   $('welcome').hidden=false;$('filename').textContent='Carregando '+file.name;$('layers').replaceChildren();$('count').textContent='Preparando modelo grande';
   document.querySelectorAll('aside button,aside input,.toolbar button,.view-controls button,#share').forEach(x=>x.disabled=true);
@@ -131,24 +136,27 @@ function sectionFrame(hostID,mode='auto'){
  const axes=[n,u,v],lo=axes.map(a=>Math.min(...points.map(p=>p.dot(a)))),hi=axes.map(a=>Math.max(...points.map(p=>p.dot(a))));
  return {n,u,v,axes,lo,hi};
 }
-function prepareSection(){
+function prepareSection(buildContours=true){
  const s=elementSection,frame=sectionFrame(s.hostID,$('sectionAxis').value);
  if(!frame)return;
  s.frame=frame;const {n,axes,lo,hi}=frame,at=T.MathUtils.lerp(lo[0],hi[0],Number($('sectionPosition').value)/100),half=Number($('sectionThickness').value)/2;
  s.at=at;s.planes=[new T.Plane(n.clone(),-at+half),new T.Plane(n.clone().negate(),at+half)];
  for(let i=0;i<3;i++)s.planes.push(new T.Plane(axes[i].clone(),-lo[i]-.002),new T.Plane(axes[i].clone().negate(),hi[i]+.002));
- if(sectionContours)dispose(sectionContours);sectionContours=null;
- const vertices=[],point=new T.Vector3(),triangle=[new T.Vector3(),new T.Vector3(),new T.Vector3()];
- for(const m of meshes)if(s.ids.has(m.userData.id)){
-  const position=m.geometry.getAttribute('position'),index=m.geometry.index,count=index?index.count:position.count;
-  for(let k=0;k<count;k+=3){for(let j=0;j<3;j++)triangle[j].fromBufferAttribute(position,index?index.getX(k+j):k+j).applyMatrix4(m.matrixWorld);
-   const distances=triangle.map(p=>p.dot(n)-at);if(distances.every(d=>d>1e-7)||distances.every(d=>d< -1e-7))continue;
-   const hits=[];for(let j=0;j<3;j++){const next=(j+1)%3,d=distances[j],e=distances[next];if(Math.abs(d)<1e-7)hits.push(triangle[j].clone());else if(d*e<0)hits.push(point.copy(triangle[j]).lerp(triangle[next],d/(d-e)).clone());}
-   const unique=hits.filter((p,i)=>!hits.slice(0,i).some(q=>q.distanceToSquared(p)<1e-14));if(unique.length===2)vertices.push(...unique[0].toArray(),...unique[1].toArray());
+ if(buildContours){
+  if(sectionContours)dispose(sectionContours);sectionContours=null;
+  const vertices=[],point=new T.Vector3(),triangle=[new T.Vector3(),new T.Vector3(),new T.Vector3()];
+  for(const m of meshes)if(s.ids.has(m.userData.id)){
+   const range=sectionRangeAlong(m,n);if(at<range[0]-1e-6||at>range[1]+1e-6)continue;
+   const position=m.geometry.getAttribute('position'),index=m.geometry.index,count=index?index.count:position.count;
+   for(let k=0;k<count;k+=3){for(let j=0;j<3;j++)triangle[j].fromBufferAttribute(position,index?index.getX(k+j):k+j).applyMatrix4(m.matrixWorld);
+    const distances=triangle.map(p=>p.dot(n)-at);if(distances.every(d=>d>1e-7)||distances.every(d=>d< -1e-7))continue;
+    const hits=[];for(let j=0;j<3;j++){const next=(j+1)%3,d=distances[j],e=distances[next];if(Math.abs(d)<1e-7)hits.push(triangle[j].clone());else if(d*e<0)hits.push(point.copy(triangle[j]).lerp(triangle[next],d/(d-e)).clone());}
+    const unique=hits.filter((p,i)=>!hits.slice(0,i).some(q=>q.distanceToSquared(p)<1e-14));if(unique.length===2)vertices.push(...unique[0].toArray(),...unique[1].toArray());
+   }
   }
+  if(vertices.length){const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(vertices,3));sectionContours=new T.LineSegments(g,new T.LineBasicMaterial({color:0xff7a32,depthTest:false,depthWrite:false,clippingPlanes:s.planes.slice(2)}));sectionContours.renderOrder=50;scene.add(sectionContours);}
  }
- if(vertices.length){const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(vertices,3));sectionContours=new T.LineSegments(g,new T.LineBasicMaterial({color:0xff7a32,depthTest:false,depthWrite:false,clippingPlanes:s.planes.slice(2)}));sectionContours.renderOrder=50;scene.add(sectionContours);}
- refreshSectionPresentation();
+ refreshSectionPresentation();ggScheduleRender();
 }
 function clearSectionAnnotations(){
  if(!sectionAnnotationGroup)return;
@@ -162,7 +170,7 @@ function clearSectionContext(){
 }
 function clearSectionPresentation(){clearSectionAnnotations();clearSectionContext();window.GG_SECTION_INFO=null;window.dispatchEvent(new CustomEvent('gg-section-update'));}
 function sectionSprite(text,position,size){
- const c=document.createElement('canvas');c.width=960;c.height=180;const x=c.getContext('2d');x.fillStyle='rgba(8,28,36,.94)';x.beginPath();x.roundRect(4,4,952,172,24);x.fill();x.strokeStyle='rgba(255,255,255,.35)';x.lineWidth=4;x.stroke();x.fillStyle='#fff';x.font='700 72px Arial';x.textAlign='center';x.textBaseline='middle';x.fillText(text,480,92);
+ const c=document.createElement('canvas');c.width=384;c.height=72;const x=c.getContext('2d');x.fillStyle='rgba(8,28,36,.92)';x.beginPath();x.roundRect(2,2,380,68,10);x.fill();x.strokeStyle='rgba(255,255,255,.3)';x.lineWidth=2;x.stroke();x.fillStyle='#fff';x.font='700 28px Arial';x.textAlign='center';x.textBaseline='middle';x.fillText(text,192,37);
  const texture=new T.CanvasTexture(c);texture.colorSpace=T.SRGBColorSpace;const sprite=new T.Sprite(new T.SpriteMaterial({map:texture,depthTest:false,depthWrite:false,transparent:true}));sprite.position.copy(position);sprite.scale.set(size*5.35,size,1);sprite.renderOrder=60;sectionAnnotationGroup.add(sprite);return sprite;
 }
 function sectionLine(points,color=0x33b6d2){
@@ -178,10 +186,9 @@ function sectionRangeAlong(mesh,n){
 }
 function rebuildSectionContext(){
  clearSectionContext();const s=elementSection;if(!s)return;sectionContextGroup=new T.Group();sectionContextGroup.name='GG_SECTION_CONTEXT';
- for(const m of meshes)if(s.ids.has(m.userData.id)){
-  m.updateWorldMatrix(true,false);const steel=isSteel(m.userData.type),host=m.userData.id===s.hostID;
-  const material=new T.MeshBasicMaterial({color:steel?0xf08a52:0x8fa7b2,side:T.DoubleSide,transparent:true,opacity:host?.13:.22,depthWrite:false,depthTest:true,wireframe:false});
-  const ghost=new T.Mesh(m.geometry,material);ghost.matrix.copy(m.matrixWorld);ghost.matrixAutoUpdate=false;ghost.renderOrder=host?2:3;sectionContextGroup.add(ghost);
+ for(const m of meshes)if(m.userData.id===s.hostID){
+  m.updateWorldMatrix(true,false);const material=new T.MeshBasicMaterial({color:0x8fa7b2,side:T.DoubleSide,transparent:true,opacity:.12,depthWrite:false,depthTest:true,wireframe:false});
+  const ghost=new T.Mesh(m.geometry,material);ghost.matrix.copy(m.matrixWorld);ghost.matrixAutoUpdate=false;ghost.renderOrder=2;sectionContextGroup.add(ghost);
  }
  scene.add(sectionContextGroup);
 }
@@ -196,14 +203,15 @@ function refreshSectionPresentation(){
  const meta=new Map((s.barData||[]).map(b=>[Number(b.id),b])),callouts=[];
  for(const [id,b] of meta){if(!b?.diameters?.length)continue;const ms=meshes.filter(m=>m.userData.id===id);if(!ms.length)continue;let min=Infinity,max=-Infinity,bb=new T.Box3();for(const m of ms){const r=sectionRangeAlong(m,f.n);min=Math.min(min,r[0]);max=Math.max(max,r[1]);bb.union(new T.Box3().setFromObject(m));}const halfBand=Math.max(0,Number($('sectionThickness').value)||0)/2;if(s.at<min-halfBand-.01||s.at>max+halfBand+.01)continue;const p=bb.getCenter(new T.Vector3()),spanN=max-min;if(spanN>Math.max(halfBand*1.5,.05))p.addScaledVector(f.n,s.at-p.dot(f.n));callouts.push({id,p,text:'Ø '+b.diameters.join(' / '),role:b.role||''});
  }
- callouts.slice(0,12).forEach((c,i)=>{let radial=c.p.clone().sub(planeCenter);radial.addScaledVector(f.n,-radial.dot(f.n));if(radial.lengthSq()<1e-8)radial=(i%2?f.u:f.v).clone();radial.normalize();const labelPos=c.p.clone().addScaledVector(radial,cross*(.28+(i%3)*.07)+piece*.014).addScaledVector(f.n,piece*.008);const dir=c.p.clone().sub(labelPos),dist=dir.length();if(dist>.001){dir.normalize();const arrow=new T.ArrowHelper(dir,labelPos,dist,0xff8b42,Math.min(labelSize*.7,dist*.32),Math.min(labelSize*.36,dist*.16));arrow.userData.ggRebarCallout=true;arrow.line.material.depthTest=false;arrow.cone.material.depthTest=false;arrow.line.renderOrder=58;arrow.cone.renderOrder=58;sectionAnnotationGroup.add(arrow);}sectionSprite(c.text,labelPos,labelSize*.82);});
- window.GG_SECTION_INFO={width:cm(width),height:cm(height),position:Number($('sectionPosition').value),bars:[...new Set(callouts.map(c=>c.text))],pieceLength:cm(length)};window.dispatchEvent(new CustomEvent('gg-section-update'));
+ const uniqueCallouts=[];const seenCallouts=new Set();for(const c of callouts.sort((a,b)=>a.p.distanceToSquared(planeCenter)-b.p.distanceToSquared(planeCenter))){const key=c.text+'|'+c.role;if(seenCallouts.has(key))continue;seenCallouts.add(key);uniqueCallouts.push(c)}
+ uniqueCallouts.slice(0,6).forEach((c,i)=>{let radial=c.p.clone().sub(planeCenter);radial.addScaledVector(f.n,-radial.dot(f.n));if(radial.lengthSq()<1e-8)radial=(i%2?f.u:f.v).clone();radial.normalize();const labelPos=c.p.clone().addScaledVector(radial,cross*(.28+(i%3)*.07)+piece*.014).addScaledVector(f.n,piece*.008);const dir=c.p.clone().sub(labelPos),dist=dir.length();if(dist>.001){dir.normalize();const arrow=new T.ArrowHelper(dir,labelPos,dist,0xff8b42,Math.min(labelSize*.7,dist*.32),Math.min(labelSize*.36,dist*.16));arrow.userData.ggRebarCallout=true;arrow.line.material.depthTest=false;arrow.cone.material.depthTest=false;arrow.line.renderOrder=58;arrow.cone.renderOrder=58;sectionAnnotationGroup.add(arrow);}sectionSprite(c.text,labelPos,labelSize*.82);});
+ window.GG_SECTION_INFO={width:cm(width),height:cm(height),position:Number($('sectionPosition').value),bars:[...new Set(uniqueCallouts.map(c=>c.text))],pieceLength:cm(length)};window.dispatchEvent(new CustomEvent('gg-section-update'));
 }
 function frameSection(){
  const s=elementSection,f=s?.frame;if(!f)return;transition=null;
  const center=f.n.clone().multiplyScalar((f.lo[0]+f.hi[0])/2).addScaledVector(f.u,(f.lo[1]+f.hi[1])/2).addScaledVector(f.v,(f.lo[2]+f.hi[2])/2);
  const cross=Math.max(f.hi[1]-f.lo[1],f.hi[2]-f.lo[2],.1),length=Math.max(f.hi[0]-f.lo[0],cross),span=Math.max(length,cross),aspect=$('canvas').clientWidth/$('canvas').clientHeight;
- const view=f.n.clone().multiplyScalar(1.12).addScaledVector(f.u,.46).addScaledVector(f.v,.3).normalize();camera.up.copy(f.v);camera.position.copy(center).addScaledVector(view,span*2.05+1);controls.target.copy(center);camera.userData.span=span*1.28/Math.min(aspect,1);camera.zoom=1;camera.near=.0001;camera.far=Math.max(box.getSize(new T.Vector3()).length()*12,100);resizeCamera(aspect);camera.updateProjectionMatrix();controls.update();
+ const view=f.n.clone().multiplyScalar(1.12).addScaledVector(f.u,.46).addScaledVector(f.v,.3).normalize();camera.up.copy(f.v);camera.position.copy(center).addScaledVector(view,span*2.05+1);controls.target.copy(center);camera.userData.span=span*1.28/Math.min(aspect,1);camera.zoom=1;camera.near=.0001;camera.far=Math.max(box.getSize(new T.Vector3()).length()*12,100);resizeCamera(aspect);camera.updateProjectionMatrix();controls.update();ggScheduleRender();
 }
 function openElementSection(){
  if(!selected||!elementInfo)return;if(mobileLayout())setMobileInspectorExpanded(true);
@@ -218,8 +226,8 @@ function openElementSection(){
 }
 function closeElementSection(){const previous=elementSection?.previous;elementSection=null;clearSectionPresentation();$('elementSection').hidden=true;camera?.up.set(0,0,1);if(previous)restoreState(previous);else update();status('');}
 $('closeSection').onclick=closeElementSection;
-let sectionFrameRequest=0;
-$('sectionPosition').oninput=()=>{cancelAnimationFrame(sectionFrameRequest);sectionFrameRequest=requestAnimationFrame(()=>{if(elementSection){update();frameSection()}})};
+let sectionFrameRequest=0,sectionContourTimer=0;
+$('sectionPosition').oninput=()=>{cancelAnimationFrame(sectionFrameRequest);sectionFrameRequest=requestAnimationFrame(()=>{if(elementSection){update({sectionContours:false});frameSection();clearTimeout(sectionContourTimer);sectionContourTimer=setTimeout(()=>{if(elementSection){prepareSection(true);ggScheduleRender()}},140)}})};
 $('sectionAxis').onchange=$('sectionThickness').onchange=()=>{if(elementSection){update();frameSection()}};
 function syncPropertyWindow(){if(!propertyWindow||propertyWindow.closed)return;const d=propertyWindow.document;d.title='Propriedades · Eng Gustavo Gil';d.body.replaceChildren();const style=d.createElement('style');style.textContent='body{font:14px Arial;color:#263d48;background:#f6f9fb;padding:24px;line-height:1.5}h1{font-size:23px}h2{font-size:18px}.property-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px}.metric{background:white;padding:14px;border:1px solid #dbe5ea;border-radius:8px}.metric span,.metric small{display:block;color:#718994}.metric strong{display:block;font-size:17px;margin:6px 0}.metric small{font-size:11px}table{width:100%;border-collapse:collapse;background:white}th,td{padding:10px;text-align:left;border-bottom:1px solid #e5ebef;overflow-wrap:anywhere}th{width:45%;font-weight:400;color:#647e8b}details{margin-top:18px}summary{font-weight:bold;cursor:pointer}.geometry-note{color:#708692;font-size:12px}';d.head.querySelectorAll('style').forEach(s=>s.remove());style.textContent+=inspectorStyles;d.head.append(style);const brand=d.createElement('p');brand.textContent='ENG GUSTAVO GIL · PROPRIEDADES IFC';const title=d.createElement('h1');title.textContent=$('elementName').textContent;const type=d.createElement('p');type.textContent=$('elementType').textContent;d.body.append(brand,title,type,d.importNode($('propertyBody'),true));d.querySelector('.section-open').onclick=()=>{openElementSection();window.focus()};}
 let dimensionGroup=null,dimensionData=null;
@@ -305,19 +313,14 @@ function ggElementText(m){
 const ggDisciplineState={architecture:true,structural:true,steel:true,hydraulic:true,sewer:true,storm:true,electrical:true,pipes:true,other:true};
 const ggDisciplineOpacity={architecture:55,structural:0,steel:0,hydraulic:0,sewer:0,storm:0,electrical:0,pipes:0,other:0};
 function ggModeFor(m){
- const type=String(m?.userData?.type||''),s=ggElementText(m);
- const pipeType=/IFCPIPE|IFCFLOWSEGMENT|IFCFLOWFITTING|IFCDISTRIBUTION/.test(type);
- if(isSteel(type))return 'steel';
- if(/IFCCABLE|IFCELECTRIC|IFCLIGHT/.test(type)||/eletric|elétric|electri|cabo|cable|eletroduto|conduit|quadro|painel|luminar|lighting/.test(s))return 'electrical';
- if(pipeType){
-  if(/esgoto|sanitar|sanitár|sewer|waste|soil|ventila/.test(s))return 'sewer';
-  if(/pluvial|storm|rain|chuva|dren/.test(s))return 'storm';
-  if(/agua|água|water|hidraul|potavel|potável|recalque|aliment|barrilete|reservat|fria|quente/.test(s))return 'hydraulic';
-  return 'pipes';
- }
- if(/IFCDOOR|IFCWINDOW|IFCROOF|IFCCOVERING|IFCSPACE|IFCFURNISH/.test(type)||/arquitet|architect/.test(s))return 'architecture';
- if(/IFCBEAM|IFCCOLUMN|IFCSLAB|IFCWALL|IFCFOOTING|IFCPILE|IFCSTAIR|IFCMEMBER|IFCPLATE/.test(type))return 'structural';
- return 'other';
+ const cacheKey=Number(m?.userData?.id);if(Number.isFinite(cacheKey)&&ggDisciplineCache.has(cacheKey))return ggDisciplineCache.get(cacheKey);
+ const type=String(m?.userData?.type||''),s=ggElementText(m),pipeType=/IFCPIPE|IFCFLOWSEGMENT|IFCFLOWFITTING|IFCDISTRIBUTION/.test(type);let mode='other';
+ if(isSteel(type))mode='steel';
+ else if(/IFCCABLE|IFCELECTRIC|IFCLIGHT/.test(type)||/eletric|elétric|electri|cabo|cable|eletroduto|conduit|quadro|painel|luminar|lighting/.test(s))mode='electrical';
+ else if(pipeType){if(/esgoto|sanitar|sanitár|sewer|waste|soil|ventila/.test(s))mode='sewer';else if(/pluvial|storm|rain|chuva|dren/.test(s))mode='storm';else if(/agua|água|water|hidraul|potavel|potável|recalque|aliment|barrilete|reservat|fria|quente/.test(s))mode='hydraulic';else mode='pipes';}
+ else if(/IFCDOOR|IFCWINDOW|IFCROOF|IFCCOVERING|IFCSPACE|IFCFURNISH/.test(type)||/arquitet|architect/.test(s))mode='architecture';
+ else if(/IFCBEAM|IFCCOLUMN|IFCSLAB|IFCWALL|IFCFOOTING|IFCPILE|IFCSTAIR|IFCMEMBER|IFCPLATE/.test(type))mode='structural';
+ if(Number.isFinite(cacheKey))ggDisciplineCache.set(cacheKey,mode);return mode;
 }
 function ggMaterialOpacity(m,base){
  const mode=ggModeFor(m),pct=Math.max(0,Math.min(95,Number(ggDisciplineOpacity[mode]||0)));

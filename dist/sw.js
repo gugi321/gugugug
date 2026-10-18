@@ -1,5 +1,5 @@
-const CACHE='eng-gustavo-g-r11-1';
-const CORE=['./','./index.html','./style.css','./app.js','./dwg.js','./github-pages.js','./eng-r10.js','./manifest.webmanifest','./app-icon.svg'];
+const CACHE='eng-gustavo-g-r16';
+const CORE=['./','./index.html','./style.css','./ui-polish-r15.css','./app.js','./manifest.webmanifest','./app-icon.svg'];
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)).catch(()=>{}));
   self.skipWaiting();

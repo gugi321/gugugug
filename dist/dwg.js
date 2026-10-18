@@ -9,9 +9,6 @@ function ensureStylesheet(id, href) {
   link.href = href;
   document.head.appendChild(link);
 }
-ensureStylesheet('gg-dwg-style', 'dwg.css');
-ensureStylesheet('gg-cad-embed-style', 'cad-embed.css');
-ensureStylesheet('gg-ui-r9-style', 'ui-r9.css');
 
 function setBuildLabel() {
   const label = document.querySelector('.build-version');
@@ -80,7 +77,7 @@ function ensureCadTab() {
       <div class="cad-embed-actions"><span id="cadEmbedState">Aguardando…</span><button id="retryCAD" type="button">Recarregar CAD</button><button id="closeDWG" type="button">Voltar ao 3D</button></div>
     </div>
     <div id="cadEmbedWrap">
-      <iframe id="cadFrame" src="${cadUrl()}" title="Mini CAD DWG online" loading="eager"></iframe>
+      <iframe id="cadFrame" title="Mini CAD DWG online" loading="lazy"></iframe>
       <div id="cadEmbedOverlay" role="status"><strong>Carregando Mini CAD online…</strong><span>Leitor DWG estático sem build local.</span></div>
     </div>`;
   workspace.appendChild(section);
@@ -89,9 +86,12 @@ function ensureCadTab() {
 ensureCadTab();
 ensureSidebarClose();
 setBuildLabel();
-void import('./quantities.js').catch(error => console.warn('Quantitativos:', error));
-void import('./share-r9.js').catch(error => console.warn('Compartilhamento R9:', error));
-void import('./dimensions-r9.js').catch(error => console.warn('Cotas ampliadas R9:', error));
+function ensureQuantitiesLauncher(){
+ const sidebar=$('sidebar');if(!sidebar||$('quantitiesOpen')||$('quantitiesLazyOpen'))return;
+ let box=$('projectQuickTools');if(!box){box=document.createElement('section');box.id='projectQuickTools';box.className='project-quick-tools';box.innerHTML='<div class="eyebrow">PROJETO <span>00</span></div>';sidebar.prepend(box)}
+ const b=document.createElement('button');b.id='quantitiesLazyOpen';b.type='button';b.className='sidebar-feature';b.textContent='▦ Quantitativos';b.onclick=async()=>{b.disabled=true;b.textContent='Carregando…';try{await import('./quantities.js');b.remove();$('quantitiesOpen')?.click()}catch(e){b.disabled=false;b.textContent='▦ Quantitativos';console.warn('Quantitativos:',e)}};box.appendChild(b);
+}
+ensureQuantitiesLauncher();
 
 const workspace = $('projectWorkspace');
 const tab = $('dwgTab');
@@ -137,6 +137,10 @@ function reloadCad() {
 
 function activateCad() {
   if (document.body.classList.contains('readonly')) return;
+  ensureStylesheet('gg-dwg-style', 'dwg.css');
+  ensureStylesheet('gg-cad-embed-style', 'cad-embed.css');
+  ensureStylesheet('gg-ui-r9-style', 'ui-r9.css');
+  if(frame && !frame.getAttribute('src')) frame.src=cadUrl();
   workspace?.classList.remove('pdf-active');
   workspace?.classList.add('dwg-active');
   document.body.classList.add('cad-online-active');

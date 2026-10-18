@@ -1,7 +1,10 @@
-import './eng-r10.js';
-
 const valuesHost=document.getElementById('dimensionValues');
 const viewport=document.getElementById('viewport');
+function installLazyTools(){
+ const header=document.querySelector('header');if(!header||document.getElementById('engToolsButton')||document.getElementById('toolsLazyButton'))return;
+ const b=document.createElement('button');b.id='toolsLazyButton';b.type='button';b.textContent='Ferramentas';b.onclick=async()=>{b.disabled=true;b.textContent='Carregando…';try{b.remove();await import('./eng-r10.js');document.getElementById('engToolsButton')?.click()}catch(e){console.warn('Ferramentas:',e)}};const open=header.querySelector('.primary.open');header.insertBefore(b,open||null);
+}
+installLazyTools();
 let cached=[];
 function ensureOverlay(){let o=document.getElementById('bigDimensionOverlay');if(o||!viewport)return o;o=document.createElement('div');o.id='bigDimensionOverlay';o.setAttribute('aria-label','Cotas ampliadas do elemento');o.innerHTML='<small>COTAS DO ELEMENTO</small><div class="big-dimension-values"></div>';viewport.appendChild(o);return o;}
 function readValues(){if(!valuesHost)return cached;const now=[...valuesHost.querySelectorAll('span')].map(el=>el.textContent?.trim()).filter(Boolean);if(now.length)cached=now;return cached;}

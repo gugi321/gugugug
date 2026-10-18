@@ -8,7 +8,6 @@ if(isGithubPages){
   if(hint)hint.textContent='Arquivos IFC, DWG e PDF são escolhidos no próprio aparelho e processados localmente no navegador.';
   const shareStatus=document.getElementById('shareStatus');
   if(shareStatus)shareStatus.textContent='No celular, use o compartilhamento de arquivos do iPhone/Android; não é necessário Netlify.';
-  void import('./eng-r10.js').catch(error=>console.warn('Ferramentas Eng Gustavo G:',error));
   void import('./share-fallback-r10.js').catch(error=>console.warn('Compartilhamento alternativo:',error));
   if('serviceWorker' in navigator){
     window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(error=>console.warn('PWA:',error)),{once:true});
