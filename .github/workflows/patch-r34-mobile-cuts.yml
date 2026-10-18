@@ -1,0 +1,52 @@
+name: Patch R34 mobile cuts and dimensions
+
+on:
+  push:
+    paths:
+      - 'scripts/patch-r34-mobile-cuts.py'
+      - '.github/workflows/patch-r34-mobile-cuts.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply R34 patch
+        run: python scripts/patch-r34-mobile-cuts.py
+      - name: Validate generated files
+        run: |
+          node --check dist/app.js
+          node --check dist/technical-hud-r34.js
+          python - <<'PY'
+          from pathlib import Path
+          app=Path('dist/app.js').read_text(encoding='utf-8')
+          html=Path('dist/index.html').read_text(encoding='utf-8')
+          checks={
+            'section close-up':'sectionSpan=Math.max(sectionH*1.85' in app,
+            'geometry bar filter':'const ids=new Set();' in app and 'ggWorldBoxCache' in app,
+            'generic cut':"cut.textContent='Ver corte transversal'" in app,
+            'mobile focus race':'selected===mesh&&!elementSection' in app,
+            'dimension HUD':'technical-hud-r34.js' in html,
+          }
+          bad=[k for k,v in checks.items() if not v]
+          if bad: raise SystemExit('Missing R34 checks: '+', '.join(bad))
+          print('R34 validation OK:', ', '.join(checks))
+          PY
+      - name: Commit generated files
+        run: |
+          if git diff --quiet -- dist/app.js dist/index.html dist/technical-hud-r34.js dist/technical-hud-r34.css; then
+            echo 'No generated changes to commit.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add dist/app.js dist/index.html dist/technical-hud-r34.js dist/technical-hud-r34.css
+          git commit -m 'R34: optimize cuts and dimensions for mobile'
+          git push
