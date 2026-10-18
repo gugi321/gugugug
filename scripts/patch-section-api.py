@@ -21,6 +21,14 @@ if old in text:
     text = text.replace(old, new, 1)
 elif 'selectID:async id=>' not in text:
     raise SystemExit('GG_VIEWER_API insertion point not found')
+
+if 'getBounds:id=>' not in text:
+    api_anchor='\n setCut:ggSetCut'
+    bounds="""
+ getBounds:id=>{const n=Number(id),items=meshes.filter(m=>m.userData.id===n);if(!items.length)return null;const b=new T.Box3();for(const m of items)b.union(new T.Box3().setFromObject(m));const s=b.getSize(new T.Vector3()),c=b.getCenter(new T.Vector3());return {id:n,type:items[0].userData.type,min:b.min.toArray(),max:b.max.toArray(),size:s.toArray(),center:c.toArray()};},
+ setCut:ggSetCut"""
+    if api_anchor not in text: raise SystemExit('bounds API insertion point not found')
+    text=text.replace(api_anchor,bounds,1)
 app.write_text(text, encoding='utf-8')
 
 index = Path('dist/index.html')
