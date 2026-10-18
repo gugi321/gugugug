@@ -1,1 +1,1 @@
-Section detail r15: whole member context, geometric rebar association, IFC bar type diameters, dimension overlay and performance polish.
+Section detail r15.1: whole member context, geometric rebar association, IFC bar type diameters, dimension overlay, visible-band callouts and performance polish.
