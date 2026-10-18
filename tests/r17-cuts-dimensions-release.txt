@@ -1,0 +1,1 @@
+R17 cuts/dimensions release: semantic B/H/L/Esp labels, proportional annotations, section extension lines, cut distance along the element, compact rebar diameter callouts, and share/CAD regression validation.
