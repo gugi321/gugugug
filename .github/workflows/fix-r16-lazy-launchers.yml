@@ -1,0 +1,48 @@
+name: Fix R16 lazy launchers
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/fix-r16-lazy-launchers.py'
+      - '.github/workflows/fix-r16-lazy-launchers.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply launcher fix
+        run: python scripts/fix-r16-lazy-launchers.py
+      - name: Validate JavaScript and launcher
+        shell: bash
+        run: |
+          node --check dist/dwg.js
+          python - <<'PY'
+          from pathlib import Path
+          t=Path('dist/dwg.js').read_text(encoding='utf-8')
+          assert "mod.installQuantities?.()" in t
+          assert "15/10/2026 · compartilhamento R9" not in t
+          assert "18/10/2026 · R16 leve · corte otimizado" in t
+          print('R16 lazy launcher OK')
+          PY
+      - name: Commit generated files
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo 'No changes.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add dist/dwg.js scripts/patch-performance-r16.py
+          git commit -m 'R16: initialize Quantitativos on lazy load'
+          git push
