@@ -22,6 +22,8 @@ jobs:
       - name: Validate JavaScript
         run: |
           node --check dist/app.js
+          node --check dist/properties.js
+          node --check dist/dimensions-r9.js
           git diff --check
       - name: Commit patched viewer
         run: |
@@ -31,6 +33,6 @@ jobs:
           fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add dist/app.js
-          git commit -m 'Fix technical filters and cut controls'
+          git add dist/app.js dist/properties.js dist/dimensions-r9.js dist/index.html dist/ui-polish-r15.css
+          git commit -m 'Improve section detail and viewer performance'
           git push
