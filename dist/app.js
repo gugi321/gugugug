@@ -1,6 +1,6 @@
 import { createInspector } from './properties.js';
 const $=id=>document.getElementById(id);
-const PUBLIC_VIEWER_ORIGIN='https://visualizar-gustavo-gil-20260915-222909-8602.netlify.app';
+const PUBLIC_VIEWER_ORIGIN='https://eng-gustavo-g.hatchable.site';
 const urlParams=new URLSearchParams(location.search),sharedId=urlParams.get('share'),embedded=$('embeddedIFC'),sharedMode=Boolean(sharedId||embedded);
 let readOnlyMode=Boolean(embedded),trustedReadOnlyLoad=false,sharePermission=embedded?'view':'edit';
 let T,Orbit,api,scene,camera,renderer,controls,model,box,grid,busy=false,axis='z',sign=1,selected=null;let W,apiReady=false,currentModelID=null,inspector=null,currentFile=null,propertyWindow=null,selectionRevision=0,isolatedID=null,transition=null;const hiddenIDs=new Set();let elementInfo=null;const propertyCache=new Map();const categories=new Map();let meshes=[];
@@ -232,6 +232,38 @@ function navigationMode(pan){if(!controls)return;controls.mouseButtons.LEFT=pan?
 function zoom(factor){if(!camera)return;transition=null;if(camera.isOrthographicCamera){camera.zoom=T.MathUtils.clamp(camera.zoom/factor,.05,1000);camera.updateProjectionMatrix()}else{camera.position.sub(controls.target).multiplyScalar(factor).add(controls.target)}controls.update()}
 if($('mobileInspectorToggle'))$('mobileInspectorToggle').onclick=()=>setMobileInspectorExpanded(!$('selection').classList.contains('mobile-expanded'));$('closeProperties').onclick=()=>{if(elementSection)closeElementSection();setMobileInspectorExpanded(false);select(null)};$('focusElement').onclick=focusSelected;$('isolateElement').onclick=isolateAndDimension;$('hideElement').onclick=()=>{if(selected){hiddenIDs.add(selected.userData.id);select(null);update()}};
 $('popout').onclick=()=>{propertyWindow=window.open('','ifc-element-properties','popup,width=520,height=760');if(!propertyWindow){status('O navegador bloqueou a nova janela. Permita pop-ups ou use o painel de propriedades.');return}propertyWindow.document.body.textContent='Carregando propriedades…';if(elementInfo)syncPropertyWindow();propertyWindow.focus()};
+function ggElementText(m){
+ const line=currentModelID!==null?(()=>{try{return api.GetLine(currentModelID,m.userData.id)}catch{return null}})():null;
+ return [m.userData.type,m.userData.name,line?.Name?.value,line?.ObjectType?.value,line?.Description?.value,line?.Tag?.value,line?.PredefinedType?.value].filter(Boolean).join(' ').toLowerCase();
+}
+function ggQuickFilter(mode='all'){
+ clearDimensions();elementSection=null;$('elementSection').hidden=true;hiddenIDs.clear();isolatedID=null;categories.forEach(c=>c.visible=true);
+ const structural=new Set(['IFCBEAM','IFCCOLUMN','IFCSLAB','IFCWALL','IFCWALLSTANDARDCASE','IFCFOOTING','IFCPILE','IFCSTAIR','IFCMEMBER','IFCPLATE','IFCREINFORCINGBAR','IFCREINFORCINGMESH','IFCTENDON','IFCTENDONANCHOR']);
+ const pipeType=t=>/IFCPIPE|IFCFLOWSEGMENT|IFCFLOWFITTING|IFCDISTRIBUTION/.test(t||'');
+ let shown=0;
+ for(const m of meshes){
+  const type=String(m.userData.type||''),s=ggElementText(m);let show=true;
+  if(mode==='steel')show=isSteel(type);
+  else if(mode==='structural')show=structural.has(type);
+  else if(mode==='hydraulic')show=pipeType(type)&&(/agua|água|water|hidraul|potavel|potável|recalque|aliment|barrilete|reservat|fria|quente/.test(s)||!/esgoto|sanitar|sanitár|sewer|waste|pluvial|storm|rain|chuva|dren/.test(s));
+  else if(mode==='sewer')show=pipeType(type)&&/esgoto|sanitar|sanitár|sewer|waste|soil|ventila/.test(s);
+  else if(mode==='storm')show=pipeType(type)&&/pluvial|storm|rain|chuva|dren/.test(s);
+  else if(mode==='electrical')show=/eletric|elétric|electri|cabo|cable|eletroduto|conduit|quadro|painel|luminar|lighting/.test(s)||/IFCCABLE|IFCELECTRIC|IFCLIGHT/.test(type);
+  else if(mode==='pipes')show=pipeType(type);
+  else if(mode==='architecture')show=/IFCDOOR|IFCWINDOW|IFCROOF|IFCCOVERING|IFCSPACE|IFCFURNISH/.test(type);
+  if(!show)hiddenIDs.add(m.userData.id);else shown++;
+ }
+ layerUI();update();
+ const labelsQuick={steel:'Armaduras',structural:'Estrutural',hydraulic:'Hidráulica / água',sewer:'Esgoto sanitário',storm:'Pluvial / drenagem',electrical:'Elétrica',pipes:'Tubulações',architecture:'Arquitetura'};
+ status(mode==='all'?'':shown?`${labelsQuick[mode]||mode}: ${shown} elemento(s) visível(is).`:`Nenhum elemento identificado como ${labelsQuick[mode]||mode}. Verifique a classificação exportada no IFC.`);
+ return shown;
+}
+function ggSetCut(a){axis=a;document.querySelectorAll('[data-axis]').forEach(b=>b.classList.toggle('active',b.dataset.axis===axis));$('cut').checked=true;update();}
+function ggClearCut(){$('cut').checked=false;update();}
+function ggSetCutPosition(value){$('position').value=String(Math.max(0,Math.min(100,Number(value)||0)));update();}
+function ggSetOpacity(value){$('opacity').value=String(Math.max(0,Math.min(95,Number(value)||0)));update();}
+function ggView(view){fit(view||'iso');}
+window.GG_VIEWER_API={filter:ggQuickFilter,setCut:ggSetCut,clearCut:ggClearCut,setCutPosition:ggSetCutPosition,setOpacity:ggSetOpacity,view:ggView,fit:()=>fit(),flipCut:()=>{sign*=-1;update()},toggleGrid:value=>{$('showGrid').checked=Boolean(value);update()},toggleEdges:value=>{$('edges').checked=Boolean(value);$('edges').dispatchEvent(new Event('change'))},showAll:()=>ggQuickFilter('all')};
 $('layerSearch').oninput=layerUI;$('sidebarToggle').onclick=()=>{document.body.classList.toggle('sidebar-hidden');$('sidebarToggle').setAttribute('aria-expanded',String(!document.body.classList.contains('sidebar-hidden')))};
 if(window.matchMedia?.('(max-width:760px)').matches){document.body.classList.add('sidebar-hidden');$('sidebarToggle').setAttribute('aria-expanded','false');}
 $('showGrid').onchange=update;$('edges').onchange=()=>{if($('edges').checked){for(const m of meshes){if(m.children.length)continue;const edge=new T.LineSegments(new T.EdgesGeometry(m.geometry,35),new T.LineBasicMaterial({color:0x354e60,transparent:true,opacity:.3,clippingPlanes:[]}));m.add(edge)}}update()};
