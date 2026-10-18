@@ -174,6 +174,7 @@ p.write_text(app, encoding='utf-8')
 # ---------------- dwg.js ----------------
 p = Path('dist/dwg.js')
 dwg = p.read_text(encoding='utf-8')
+dwg = dwg.replace("15/10/2026 · compartilhamento R9 · cotas ampliadas", "18/10/2026 · R16 leve · corte otimizado")
 
 # Do not load CAD styles until CAD is opened.
 dwg = dwg.replace("ensureStylesheet('gg-dwg-style', 'dwg.css');\nensureStylesheet('gg-cad-embed-style', 'cad-embed.css');\nensureStylesheet('gg-ui-r9-style', 'ui-r9.css');\n", "")
@@ -192,7 +193,7 @@ setBuildLabel();
 function ensureQuantitiesLauncher(){
  const sidebar=$('sidebar');if(!sidebar||$('quantitiesOpen')||$('quantitiesLazyOpen'))return;
  let box=$('projectQuickTools');if(!box){box=document.createElement('section');box.id='projectQuickTools';box.className='project-quick-tools';box.innerHTML='<div class="eyebrow">PROJETO <span>00</span></div>';sidebar.prepend(box)}
- const b=document.createElement('button');b.id='quantitiesLazyOpen';b.type='button';b.className='sidebar-feature';b.textContent='▦ Quantitativos';b.onclick=async()=>{b.disabled=true;b.textContent='Carregando…';try{await import('./quantities.js');b.remove();$('quantitiesOpen')?.click()}catch(e){b.disabled=false;b.textContent='▦ Quantitativos';console.warn('Quantitativos:',e)}};box.appendChild(b);
+ const b=document.createElement('button');b.id='quantitiesLazyOpen';b.type='button';b.className='sidebar-feature';b.textContent='▦ Quantitativos';b.onclick=async()=>{b.disabled=true;b.textContent='Carregando…';try{const mod=await import('./quantities.js');mod.installQuantities?.();b.remove();$('quantitiesOpen')?.click()}catch(e){b.disabled=false;b.textContent='▦ Quantitativos';console.warn('Quantitativos:',e)}};box.appendChild(b);
 }
 ensureQuantitiesLauncher();
 '''
