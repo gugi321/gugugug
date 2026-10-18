@@ -1,0 +1,1 @@
+R35 mobile cuts regression: semantic B/H for beams and columns, vertical slab thickness, fixed dimension HUD, cut close-up, geometry-only rebar association, and 390x844 Playwright smoke.
