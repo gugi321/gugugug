@@ -1,5 +1,6 @@
 from pathlib import Path
 
+# Deterministic section diagnostics patch, validated by GitHub Actions.
 app = Path('dist/app.js')
 text = app.read_text(encoding='utf-8')
 
