@@ -45,6 +45,7 @@ jobs:
           node --check dist/eng-r10.js
           node --check dist/dimensions-r9.js
           node --check dist/github-pages.js
+          node --check dist/technical-hud-r34.js
           node --check dist/sw.js
           if [ -f dist/quantities.js ]; then node --check dist/quantities.js; fi
 
@@ -62,6 +63,8 @@ jobs:
           test -s site/cad/index.html
           test -s site/cad/assets/libredwg-parser-worker.js
           test -s site/cad/assets/libredwg-web.wasm
+          test -s site/technical-hud-r34.js
+          test -s site/technical-hud-r34.css
           grep -q "./vendor/web-ifc/web-ifc-api.js" site/app.js
           grep -q "./vendor/three/three.module.js" site/index.html
 
@@ -72,6 +75,11 @@ jobs:
         env:
           SMOKE_ROOT: site
         run: npm run test:web-ifc
+
+      - name: Test R34 cuts and dimensions at 390x844
+        env:
+          SMOKE_ROOT: site
+        run: node scripts/smoke-r34-ui.mjs
 
       - name: Download pinned LibreDWG sample for functional CAD test
         shell: bash
