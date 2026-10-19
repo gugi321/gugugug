@@ -25,7 +25,7 @@
     "@mlightcad/mtext-parser": "1.5.3",
     "@mlightcad/mtext-renderer": "0.13.2",
     "@netlify/blobs": "10.1.0",
-    "pdfjs-dist": "4.10.38",
+    "pdfjs-dist": "6.4.299",
     "three-ifc": "npm:three@0.160.1",
     "web-ifc": "0.0.68"
   },
