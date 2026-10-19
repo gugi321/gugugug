@@ -334,14 +334,19 @@ function ggElementText(m){
 const ggDisciplineState={architecture:true,structural:true,steel:true,hydraulic:true,sewer:true,storm:true,electrical:true,pipes:true,other:true};
 const ggDisciplineOpacity={architecture:55,structural:0,steel:0,hydraulic:0,sewer:0,storm:0,electrical:0,pipes:0,other:0};
 function ggModeFor(m){
- const cacheKey=Number(m?.userData?.id);if(Number.isFinite(cacheKey)&&ggDisciplineCache.has(cacheKey))return ggDisciplineCache.get(cacheKey);
- const type=String(m?.userData?.type||''),s=ggElementText(m),pipeType=/IFCPIPE|IFCFLOWSEGMENT|IFCFLOWFITTING|IFCDISTRIBUTION/.test(type);let mode='other';
- if(isSteel(type))mode='steel';
- else if(/IFCCABLE|IFCELECTRIC|IFCLIGHT/.test(type)||/eletric|elétric|electri|cabo|cable|eletroduto|conduit|quadro|painel|luminar|lighting/.test(s))mode='electrical';
- else if(pipeType){if(/esgoto|sanitar|sanitár|sewer|waste|soil|ventila/.test(s))mode='sewer';else if(/pluvial|storm|rain|chuva|dren/.test(s))mode='storm';else if(/agua|água|water|hidraul|potavel|potável|recalque|aliment|barrilete|reservat|fria|quente/.test(s))mode='hydraulic';else mode='pipes';}
- else if(/IFCDOOR|IFCWINDOW|IFCROOF|IFCCOVERING|IFCSPACE|IFCFURNISH/.test(type)||/arquitet|architect/.test(s))mode='architecture';
- else if(/IFCBEAM|IFCCOLUMN|IFCSLAB|IFCWALL|IFCFOOTING|IFCPILE|IFCSTAIR|IFCMEMBER|IFCPLATE/.test(type))mode='structural';
- if(Number.isFinite(cacheKey))ggDisciplineCache.set(cacheKey,mode);return mode;
+ const type=String(m?.userData?.type||''),s=ggElementText(m);
+ const pipeType=/IFCPIPE|IFCFLOWSEGMENT|IFCFLOWFITTING|IFCDISTRIBUTION/.test(type);
+ if(isSteel(type))return 'steel';
+ if(/IFCCABLE|IFCELECTRIC|IFCLIGHT/.test(type)||/eletric|elétric|electri|cabo|cable|eletroduto|conduit|quadro|painel|luminar|lighting/.test(s))return 'electrical';
+ if(pipeType){
+  if(/esgoto|sanitar|sanitár|sewer|waste|soil|ventila/.test(s))return 'sewer';
+  if(/pluvial|storm|rain|chuva|dren/.test(s))return 'storm';
+  if(/agua|água|water|hidraul|potavel|potável|recalque|aliment|barrilete|reservat|fria|quente/.test(s))return 'hydraulic';
+  return 'pipes';
+ }
+ if(/IFCDOOR|IFCWINDOW|IFCROOF|IFCCOVERING|IFCSPACE|IFCFURNISH/.test(type)||/arquitet|architect/.test(s))return 'architecture';
+ if(/IFCBEAM|IFCCOLUMN|IFCSLAB|IFCWALL|IFCFOOTING|IFCPILE|IFCSTAIR|IFCMEMBER|IFCPLATE/.test(type))return 'structural';
+ return 'other';
 }
 function ggMaterialOpacity(m,base){
  const mode=ggModeFor(m),pct=Math.max(0,Math.min(95,Number(ggDisciplineOpacity[mode]||0)));
@@ -382,16 +387,9 @@ window.GG_VIEWER_API={
  setAllLayers:ggSetAllLayers,
  getLayers:()=>({state:{...ggDisciplineState},opacity:{...ggDisciplineOpacity}}),
  modeForID:id=>{const m=meshes.find(x=>x.userData.id===id);return m?ggModeFor(m):null},
- selectID:async id=>{const n=Number(id),m=meshes.find(x=>x.userData.id===n);if(!m)return null;await select(m);return {selectedID:selected?.userData?.id??null,elementID:elementInfo?.id??null,type:elementInfo?.type??null,name:elementInfo?.name??null,sectionCandidates:[...(elementInfo?.sectionCandidates||[])],reinforcementBars:(elementInfo?.reinforcementBars||[]).map(b=>({id:b.id,role:b.role,diameters:[...(b.diameters||[])]})),linked:(elementInfo?.linked||[]).map(x=>x.id)};},
- openSelectedSection:()=>{openElementSection();return Boolean(elementSection);},
- getSelectionDebug:()=>({selectedID:selected?.userData?.id??null,elementID:elementInfo?.id??null,type:elementInfo?.type??null,name:elementInfo?.name??null,sectionCandidates:[...(elementInfo?.sectionCandidates||[])],reinforcementBars:(elementInfo?.reinforcementBars||[]).map(b=>({id:b.id,role:b.role,diameters:[...(b.diameters||[])]})),linked:(elementInfo?.linked||[]).map(x=>x.id)}),
- getSectionDebug:()=>({active:Boolean(elementSection),hostID:elementSection?.hostID??null,ids:[...(elementSection?.ids||[])],info:window.GG_SECTION_INFO||null,contextChildren:sectionContextGroup?.children?.length||0,annotationChildren:sectionAnnotationGroup?.children?.length||0,rebarCallouts:sectionAnnotationGroup?.children?.filter(x=>x.userData?.ggRebarCallout).length||0}),
- getBounds:id=>{const n=Number(id),items=meshes.filter(m=>m.userData.id===n);if(!items.length)return null;const b=new T.Box3();for(const m of items)b.union(new T.Box3().setFromObject(m));const s=b.getSize(new T.Vector3()),c=b.getCenter(new T.Vector3());return {id:n,type:items[0].userData.type,min:b.min.toArray(),max:b.max.toArray(),size:s.toArray(),center:c.toArray()};},
- setCut:ggSetCut,clearCut:ggClearCut,setCutPosition:ggSetCutPosition,setOpacity:ggSetOpacity,view:ggView,fit:()=>fit(),flipCut:()=>{sign*=-1;update()},toggleGrid:value=>{$('showGrid').checked=Boolean(value);update()},toggleEdges:value=>{$('edges').checked=Boolean(value);$('edges').dispatchEvent(new Event('change'))},showAll:()=>ggQuickFilter('all'),
- getViewState:()=>viewState(),
- frameSection:()=>frameSection()
+ setCut:ggSetCut,clearCut:ggClearCut,setCutPosition:ggSetCutPosition,setOpacity:ggSetOpacity,view:ggView,fit:()=>fit(),flipCut:()=>{sign*=-1;update()},toggleGrid:value=>{$('showGrid').checked=Boolean(value);update()},toggleEdges:value=>{$('edges').checked=Boolean(value);$('edges').dispatchEvent(new Event('change'))},showAll:()=>ggQuickFilter('all')
 };
-$('layerSearch').oninput=layerUI;$('sidebarToggle').onclick=()=>{document.body.classList.toggle('sidebar-hidden');$('sidebarToggle').setAttribute('aria-expanded',String(!document.body.classList.contains('sidebar-hidden')))};$('sidebarToggle').onclick=()=>{document.body.classList.toggle('sidebar-hidden');$('sidebarToggle').setAttribute('aria-expanded',String(!document.body.classList.contains('sidebar-hidden')))};$('sidebarToggle').onclick=()=>{document.body.classList.toggle('sidebar-hidden');$('sidebarToggle').setAttribute('aria-expanded',String(!document.body.classList.contains('sidebar-hidden')))};
+$('layerSearch').oninput=layerUI;$('sidebarToggle').onclick=()=>{document.body.classList.toggle('sidebar-hidden');$('sidebarToggle').setAttribute('aria-expanded',String(!document.body.classList.contains('sidebar-hidden')))};$('sidebarToggle').onclick=()=>{document.body.classList.toggle('sidebar-hidden');$('sidebarToggle').setAttribute('aria-expanded',String(!document.body.classList.contains('sidebar-hidden')))};$('sidebarToggle').onclick=()=>{document.body.classList.toggle('sidebar-hidden');$('sidebarToggle').setAttribute('aria-expanded',String(!document.body.classList.contains('sidebar-hidden')))};$('sidebarToggle').onclick=()=>{document.body.classList.toggle('sidebar-hidden');$('sidebarToggle').setAttribute('aria-expanded',String(!document.body.classList.contains('sidebar-hidden')))};
 if(window.matchMedia?.('(max-width:760px)').matches){document.body.classList.add('sidebar-hidden');$('sidebarToggle').setAttribute('aria-expanded','false');}
 $('showGrid').onchange=update;$('edges').onchange=()=>{if($('edges').checked){for(const m of meshes){if(m.children.length)continue;const edge=new T.LineSegments(new T.EdgesGeometry(m.geometry,35),new T.LineBasicMaterial({color:0x354e60,transparent:true,opacity:.3,clippingPlanes:[]}));m.add(edge)}}update()};
 document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>fit(b.dataset.view));$('projection').onclick=()=>changeProjection(!camera.isOrthographicCamera);$('orbit').onclick=()=>navigationMode(false);$('pan').onclick=()=>navigationMode(true);$('zoomIn').onclick=()=>zoom(.8);$('zoomOut').onclick=()=>zoom(1.25);
